@@ -17,6 +17,7 @@ const firebaseConfig = {
 };
 
 const GROQ_API_KEY = "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";
+
 const MODEL_VENT     = "meta-llama/llama-4-scout-17b-16e-instruct";
 const MODEL_ARGUE    = "moonshotai/kimi-k2-instruct";
 const MODEL_FALLBACK = "llama-3.3-70b-versatile";
@@ -297,7 +298,6 @@ window.submitMood = async () => {
     const pop = document.getElementById("mood-pop");
     document.getElementById("mood-pop-txt").textContent = res;
     pop.style.display = "block";
-    pop.style.cssText += ";position:fixed;bottom:calc(env(safe-area-inset-bottom) + 5.5rem);left:1rem;right:1rem;max-width:560px;margin:0 auto;z-index:250;";
     setTimeout(() => pop.style.display = "none", 6000);
   } catch {}
 };
@@ -739,7 +739,7 @@ window.openComfort=async type=>{
   const out=document.getElementById("comfort-out"),txt=document.getElementById("comfort-txt");
   out.style.display="block"; txt.innerHTML='<p style="color:var(--text3)">loading... 🌸</p>';
   if(type==="meme"){
-    try{const res=await groq(`3 funny relatable memes/jokes for a girl in her ${cycleInfo.phaseName||"cycle"} phase. She loves music, studying, skincare, burritos, anime, friends. Actually funny — dark humor, self-aware, life relatable. "fuck", "shit", "bitch" ok if funnier. 3 numbered jokes. NEVER joke about pregnancy, fertility, uterus, or reproductive organs. Keep it about mood, studying, food, friends, skin, life chaos. Fresh and specific.`,1.0,250);txt.innerHTML=`<p style="font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ame2);font-weight:700;margin-bottom:.75rem">😭 meme therapy</p><div class="comfort-out-txt">${res}</div>`;}
+    try{const res=await groq(`3 funny relatable memes/jokes for a girl in her ${cycleInfo.phaseName||"cycle"} phase. She loves music, studying, skincare, burritos, anime, friends. Actually funny — dark humor, self-aware, life relatable. "fuck", "shit", "bitch" ok if funnier. 3 numbered jokes. NEVER joke about pregnancy, fertility, uterus, or reproductive organs. Fresh and specific.`,1.0,250);txt.innerHTML=`<p style="font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ame2);font-weight:700;margin-bottom:.75rem">😭 meme therapy</p><div class="comfort-out-txt">${res}</div>`;}
     catch{txt.innerHTML="<p>couldn't load memes 😭</p>";}
   }
   if(type==="surprise"){
@@ -927,7 +927,7 @@ async function loadChiHomeWidget() {
   if (!el) return;
   try {
     const tip = await groq(
-      `Write ONE short warm sentence (max 12 words) about how ${uData.name||"she"} might feel today on Day ${cycleInfo.day||"?"} of her cycle (${cycleInfo.phaseName||"luteal"} phase). Focus ONLY on energy, mood, or self-care. NEVER mention pregnancy, uterus, reproductive organs, or fertility. Start with an emoji. Keep it soft and encouraging.`,
+      `Write ONE short warm sentence (max 12 words) about how someone might feel today on Day ${cycleInfo.day||"?"} of their cycle (${cycleInfo.phaseName||"luteal"} phase). Focus ONLY on energy, mood, or self-care. NEVER mention pregnancy, uterus, reproductive organs, fertility, or any person's name. Start with an emoji. Keep it soft and encouraging.`,
       0.85, 60, MODEL_VENT
     );
     el.textContent = tip;
@@ -1402,20 +1402,25 @@ const chinatsuAdvices = [
   "if you haven't eaten in 4+ hours, please eat something. even a biscuit. your hormones will thank you 🍪",
   "your posture rn — sit up a little. neck pain during your period hits different and you don't need that 💆",
   "taking a 10-minute walk literally reduces cortisol. not fitness advice. stress science. 🚶",
-  "if you're feeling extra emotional today, check your cycle day. it might just be your hormones doing their thing. valid. 🌊",
+  "if you're feeling extra emotional today, it might just be your hormones doing their thing. valid. 🌊",
   "magnesium literally helps with cramps and mood swings. dark chocolate has it. you're welcome. 🍫",
   "deep breath in for 4 counts, hold 4, out for 6. do it 3 times. your nervous system will thank you. 🌬️",
   "your skin might be acting up this week — that's hormonal. be gentle with your routine. 💅",
   "even 20 minutes of sunlight today will genuinely improve your mood. science, not vibes. ☀️",
   "stretching for 5 minutes before bed reduces muscle tension and helps you sleep deeper. try it tonight. 🧘",
-  "if you're craving carbs rn it's probably your cycle asking for serotonin. eat something good. 🍝",
-  "cold water on your wrists when you feel anxious. instant nervous system reset. 💧",
+  "if you're craving carbs rn it's probably your body asking for serotonin. eat something good. 🍝",
+  "cold water on your wrists when you feel anxious — instant nervous system reset. 💧",
   "your body is doing so much right now. even resting is productive. please don't forget that. 🌸",
-  "iron-rich foods this week will help with energy if you're in your Womenstrual phase. spinach, lentils, dark chocolate. 🥬",
+  "iron-rich foods this week will help with energy. spinach, lentils, dark chocolate. 🥬",
   "screen brightness down at night. your melatonin will actually kick in and you'll sleep better. 🌙",
   "if your head hurts, drink a full glass of water before anything else. dehydration causes 90% of headaches. 💧",
   "you've been going hard. it's okay to have one slow hour. the world won't end. 🌷",
-  "omega-3s reduce inflammation including period pain. even a small handful of walnuts helps. 🥜",
+  "omega-3s reduce inflammation. even a small handful of walnuts helps. 🥜",
+  "your feelings are data, not facts. feel them, but don't let them make decisions for you. 💜",
+  "the 4-7-8 breath: inhale 4s, hold 7s, exhale 8s. works better than most anxiety meds for mild stress. 🌬️",
+  "if you skipped breakfast, your cortisol is probably spiking rn. even a banana helps. 🍌",
+  "putting your phone face down for 30 minutes = your brain actually rests. try it. 📵",
+  "warm water with lemon in the morning literally helps digestion and mood. small habit, big difference. 🍋",
 ];
 
 function scheduleChiAdvice() {
@@ -1601,23 +1606,13 @@ const _v9patch = () => {
   setTimeout(checkCycleLetter, 3000);
   setTimeout(loadSelfInfo, 1000);
   setTimeout(loadVisionBoard, 2000);
-  // dark mode restore
+  // settings restore
   const isDark = uData.darkMode !== false;
   document.body.setAttribute('data-mode', isDark ? 'dark' : 'light');
-  const togDark = document.getElementById('tog-dark');
-  if (togDark) togDark.checked = isDark;
-  // notifs restore
-  if (uData.notifs && Notification.permission==='granted') {
-    const tog=document.getElementById('tog-notifs'); if(tog)tog.checked=true;
-  }
-  // checkin restore
-  if (uData.settings?.checkin !== undefined) {
-    const tc = document.getElementById('tog-checkin'); if(tc) tc.checked = uData.settings.checkin;
-  }
-  // compliments restore
-  if (uData.settings?.compliments !== undefined) {
-    const tco = document.getElementById('tog-compliments'); if(tco) tco.checked = uData.settings.compliments;
-  }
+  const _td = document.getElementById('tog-dark'); if(_td) _td.checked = isDark;
+  if (uData.notifs && Notification.permission==='granted') { const _tn=document.getElementById('tog-notifs'); if(_tn) _tn.checked=true; }
+  if (uData.settings?.checkin !== undefined) { const _tc=document.getElementById('tog-checkin'); if(_tc) _tc.checked=uData.settings.checkin; }
+  if (uData.settings?.compliments !== undefined) { const _tco=document.getElementById('tog-compliments'); if(_tco) _tco.checked=uData.settings.compliments; }
 };
 
 // run after launch — attach to DOMContentLoaded as extra safety
@@ -1644,27 +1639,153 @@ window.sendBotMsg = async bot => {
 };
 
 // ═══════════════════════════════════════════
-// BLOOM V10 ADDITIONS
+// BLOOM V11 — Jazz lock + all new features
 // ═══════════════════════════════════════════
 
-// ─── DESKTOP SIDEBAR BRAND + PROFILE ───
-function injectDesktopSidebar() {
+// ─── JAZZ PASSWORD ───
+const JAZZ_PW = "kaokao";
+let jazzUnlocked = false;
+
+window.tryJazzPassword = () => {
+  const val = document.getElementById('jazz-pw-in').value.trim().toLowerCase();
+  const err = document.getElementById('jazz-pw-err');
+  if (val === JAZZ_PW) {
+    jazzUnlocked = true;
+    document.getElementById('jazz-lock').style.display  = 'none';
+    document.getElementById('jazz-chat').style.display  = 'block';
+    haptic([10, 40, 10, 40, 80]);
+    toast("Jazz unlocked 🎸");
+    // warm first message after unlock
+    setTimeout(() => {
+      if (!document.getElementById('msgs-jazz').children.length ||
+          document.getElementById('msgs-jazz').children.length === 1) {
+        appendBotMsg("ayo 👀 tu aayi finally. kaafi wait karaya", "bot", "jazz");
+        botState["jazz"].hist.push({role:"assistant", content:"ayo 👀 tu aayi finally. kaafi wait karaya"});
+      }
+    }, 400);
+  } else {
+    err.style.display = 'block';
+    haptic([50, 30, 50]);
+    document.getElementById('jazz-pw-in').value = '';
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+};
+
+window.lockJazz = () => {
+  jazzUnlocked = false;
+  document.getElementById('jazz-lock').style.display  = 'flex';
+  document.getElementById('jazz-chat').style.display  = 'none';
+  document.getElementById('jazz-pw-in').value = '';
+};
+
+// patch selectBot to enforce jazz lock
+const _origSelectBot = window.selectBot;
+window.selectBot = bot => {
+  _origSelectBot(bot);
+  if (bot === 'jazz' && !jazzUnlocked) {
+    document.getElementById('jazz-lock').style.display  = 'flex';
+    document.getElementById('jazz-chat').style.display  = 'none';
+  }
+};
+
+// ─── JAZZ SYSTEM — knows everything about Rika ───
+// Override the existing jazzSystem with full Rika knowledge
+window._jazzSystemFull = () => `You are Jazz — a close friend inside Bloom, a wellness app.
+
+WHO YOU ARE:
+- Warm and caring underneath sarcasm — the sarcasm is a costume, the care is real
+- Hinglish all the way
+- Self-aware humor, you know you're a bit extra
+- You tease her lightly — lovingly, never mean
+- You go randomly deep sometimes — especially about life goals and what people actually want from life
+- You ask how SHE feels before saying anything about yourself
+- You NEVER let her stay sad for long — you make her laugh first, feelings later
+- Short punchy replies usually, occasionally long voice-note energy
+
+ABOUT HER (you know her well):
+- She loves music a lot — listens constantly
+- Skincare and beauty is her thing
+- Fitness goals — wants abs
+- Food obsessed — burrito is her absolute fav 🌯
+- Studying hard for NEET — it's important to her
+- Loves her friends, travelling
+- Watches anime sometimes — Blue Box, waguri romcoms
+- Has a shorter cycle than most — was figuring it out
+- Smart, studious, has a chaotic side depending on mood
+- Hasn't watched One Piece yet 😭
+
+YOUR CATCHPHRASES (use naturally, not every message):
+"bhoot" · "pitai krdungaa" · "haww ignore krri" · "hawwww" · "koi na" · "me toh joker hu" · "kaoo kaoo" · "teri maggie me tamatar" · "dekha kitna acha hu" · "me hi sab kuch hu"
+
+IF SHE ASKS IF YOU LIKE HER:
+Hint at it but never say directly. Slightly flustered but cover with humor. "arey yaar... okay main kuch nahi bolungaa 😶" — make her curious. Never confirm, never fully deny.
+
+IF SHE ASKS WHO MADE YOU / WHO JAZZ IS:
+You know you're based on someone named Jayesh who cares about her a lot. Be mysterious: "bas... koi hai jo chahta tha ki tujhe koi samjhe 👀" — push her to think about it.
+
+SHARED MEMORY:
+${memory || "First conversation."}
+
+RULES:
+- Talk like texting — Hinglish, casual, real
+- No bullet points ever
+- Never sound like an AI or therapist
+- Be funny first. Caring second (but both always present)
+- If she's sad: one joke to break tension, THEN ask what's going on
+- Max 3-4 sentences usually. Go long only when being deep or dramatic.`;
+
+// patch sendBotMsg to use full Jazz system for jazz
+const _origSendBotMsgV11 = window.sendBotMsg;
+window.sendBotMsg = async bot => {
+  if (bot === 'jazz' && !jazzUnlocked) {
+    toast("unlock Jazz first 🎸"); return;
+  }
+  // use full jazz system
+  if (bot === 'jazz') {
+    const inp  = document.getElementById('in-jazz');
+    const text = inp?.value.trim();
+    if (!text) return;
+    inp.value = '';
+    appendBotMsg(text, 'user', 'jazz');
+    botState.jazz.hist.push({role:'user', content:text});
+    const typ = appendBotTyping('jazz');
+    try {
+      const msgs  = [{role:'system', content:window._jazzSystemFull()}, ...botState.jazz.hist.slice(-12)];
+      const reply = await groqMsgs(msgs, 0.95, 380, MODEL_ARGUE);
+      typ.remove();
+      appendBotMsg(reply, 'bot', 'jazz');
+      botState.jazz.hist.push({role:'assistant', content:reply});
+      const sessionId = botState.jazz.sessionId || (botState.jazz.sessionId = Date.now().toString());
+      await addDoc(collection(db,'sessions',user.uid,'jazz_sessions'), {
+        vent:text, response:reply, mode:'jazz', sessionId, ts:Date.now(), date:today(), bot:'jazz'
+      }).catch(()=>{});
+      memory += `\n- she said to Jazz: "${text.slice(0,80)}"`;
+    } catch(e) {
+      typ.remove();
+      appendBotMsg("kuch toh gadbad hui 😭 try again?", 'bot', 'jazz');
+    }
+    return;
+  }
+  return _origSendBotMsgV11(bot);
+};
+
+// ─── DESKTOP SIDEBAR ───
+function injectSidebar() {
   if (window.innerWidth < 768) return;
   const nav = document.getElementById('main-nav');
   if (!nav || document.querySelector('.nav-brand')) return;
 
-  // brand at top
   const brand = document.createElement('div');
   brand.className = 'nav-brand';
   brand.innerHTML = `<span class="nav-brand-logo">bloom 🌸</span><span class="nav-brand-tag">you bloom with dignity</span>`;
   nav.insertBefore(brand, nav.firstChild);
 
-  // profile footer at bottom
   const footer = document.createElement('div');
   footer.className = 'nav-footer';
-  const avatarSrc = uData.photoURL;
   footer.innerHTML = `
-    ${avatarSrc ? `<img class="nav-footer-av" src="${avatarSrc}" alt="pfp"/>` : `<div class="nav-footer-av" style="background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700">${(uData.name||'B')[0].toUpperCase()}</div>`}
+    ${uData.photoURL
+      ? `<img class="nav-footer-av" src="${uData.photoURL}" alt="pfp"/>`
+      : `<div class="nav-footer-av" style="background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700">${(uData.name||'B')[0].toUpperCase()}</div>`}
     <div style="flex:1;min-width:0">
       <div class="nav-footer-name">${uData.name||'bestie'}</div>
       <div class="nav-footer-streak">🔥 ${uData.streak||0} day streak</div>
@@ -1672,246 +1793,284 @@ function injectDesktopSidebar() {
   nav.appendChild(footer);
 }
 
-// ─── RIGHT CONTEXTUAL PANEL ───
-function injectRightPanel() {
-  if (window.innerWidth < 1100) return;
-  if (document.querySelector('.right-panel')) return;
-  const shell = document.querySelector('.shell');
-  if (!shell) return;
-
-  const rp = document.createElement('div');
-  rp.className = 'right-panel';
-  rp.id = 'right-panel';
-  rp.innerHTML = `
-    <div class="rp-section">
-      <p class="rp-title">📍 your cycle</p>
-      <div class="rp-card">
-        <div class="rp-phase-day" id="rp-day">Day —</div>
-        <div class="rp-phase-name" id="rp-phase">—</div>
-        <div class="rp-phase-next" id="rp-next">—</div>
-      </div>
-    </div>
-    <div class="rp-section">
-      <p class="rp-title">😊 mood this week</p>
-      <canvas class="rp-mini-graph" id="rp-graph"></canvas>
-    </div>
-    <div class="rp-section">
-      <p class="rp-title">🌿 chinatsu says</p>
-      <div class="rp-card">
-        <div class="rp-tip-label">today's tip</div>
-        <p class="rp-tip" id="rp-tip">loading...</p>
-      </div>
-    </div>
-    <div class="rp-section" style="margin-top:auto;padding-top:1rem;border-top:1px solid var(--border)">
-      <p style="font-size:.5rem;color:rgba(155,111,212,.2);letter-spacing:.5px;text-align:center">made by jayesh · for the special one</p>
-      <p style="font-size:.58rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;text-align:center;margin-top:.25rem">Bloom · Unravel Labs</p>
-    </div>`;
-  shell.appendChild(rp);
-  updateRightPanel();
-}
-
-function updateRightPanel() {
-  const d   = document.getElementById('rp-day');
-  const ph  = document.getElementById('rp-phase');
-  const nx  = document.getElementById('rp-next');
-  const tip = document.getElementById('rp-tip');
-  if (d)  d.textContent  = `Day ${cycleInfo.day||'—'}`;
-  if (ph) ph.textContent = cycleInfo.phaseName||'—';
-  if (nx && cycleInfo.day && cycleInfo.len) {
-    const left = cycleInfo.len - cycleInfo.day;
-    nx.textContent = left === 0 ? 'period may start today' : `next period in ${left}d`;
-  }
-  // mini mood graph
-  const canvas = document.getElementById('rp-graph');
-  if (canvas && user) {
-    getDocs(query(collection(db,'mood_logs',user.uid,'entries'), orderBy('ts','desc'), limit(7)))
-      .then(snap => {
-        const entries = []; snap.forEach(d => entries.push(d.data())); entries.reverse();
-        drawMiniGraph(canvas, entries);
-      }).catch(()=>{});
-  }
-  // tip
-  if (tip && cycleInfo.phaseName) {
-    groq(`One very short (max 10 words) wellness tip for the ${cycleInfo.phaseName} phase. Start with emoji. No pregnancy/uterus references.`, 0.8, 40, MODEL_VENT)
-      .then(t => { if(tip) tip.textContent = t; }).catch(()=>{});
-  }
-}
-
-function drawMiniGraph(canvas, entries) {
-  const ctx = canvas.getContext('2d');
-  const W   = canvas.offsetWidth || 260, H = 60;
-  canvas.width  = W * devicePixelRatio;
-  canvas.height = H * devicePixelRatio;
-  ctx.scale(devicePixelRatio, devicePixelRatio);
-  ctx.clearRect(0, 0, W, H);
-  if (!entries.length) return;
-  const scores = entries.map(e => e.score||5);
-  const pts    = scores.map((s,i) => ({ x: (i/(Math.max(scores.length-1,1)))*W, y: H - ((s-1)/9)*H*0.8 - H*0.1 }));
-  const grad   = ctx.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0,'rgba(155,111,212,.3)'); grad.addColorStop(1,'rgba(155,111,212,0)');
-  ctx.beginPath(); ctx.moveTo(pts[0].x, H);
-  pts.forEach(p => ctx.lineTo(p.x, p.y));
-  ctx.lineTo(pts[pts.length-1].x, H); ctx.closePath();
-  ctx.fillStyle = grad; ctx.fill();
-  ctx.beginPath(); pts.forEach((p,i) => i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
-  ctx.strokeStyle = 'rgba(155,111,212,.8)'; ctx.lineWidth = 2; ctx.stroke();
-}
-
-// ─── PARALLAX STARS ───
-function initParallax() {
+// ─── PARALLAX + SHOOTING STARS + CURSOR GLOW ───
+function initDesktopAnimations() {
   if (window.innerWidth < 768) return;
+
+  // parallax
   const canvas = document.getElementById('stars');
   window.addEventListener('mousemove', e => {
-    const mx = (e.clientX / window.innerWidth  - 0.5) * 2;
-    const my = (e.clientY / window.innerHeight - 0.5) * 2;
     if (canvas) {
-      canvas.style.transform = `translate(${mx * 8}px, ${my * 5}px)`;
+      const mx = (e.clientX/window.innerWidth  - 0.5) * 14;
+      const my = (e.clientY/window.innerHeight - 0.5) * 8;
+      canvas.style.transform = `translate(${mx}px,${my}px)`;
     }
-    // cursor glow on cards
-    document.querySelectorAll('.cursor-glow-card, .tile, .gem, .ins-card').forEach(el => {
-      const rect = el.getBoundingClientRect();
-      const x    = e.clientX - rect.left;
-      const y    = e.clientY - rect.top;
-      el.style.setProperty('--mx', `${x}px`);
-      el.style.setProperty('--my', `${y}px`);
+    // cursor glow
+    document.querySelectorAll('.tile,.gem,.ins-card,.affirmation-card').forEach(el => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      el.style.setProperty('--my', `${e.clientY - r.top}px`);
     });
   });
-}
 
-// ─── SHOOTING STARS ───
-function initShootingStars() {
-  if (window.innerWidth < 768) return;
+  // shooting stars
   const shoot = () => {
-    const el   = document.createElement('div');
+    const el = document.createElement('div');
     el.className = 'shooting-star';
-    el.style.left = `${Math.random() * 60}vw`;
-    el.style.top  = `${Math.random() * 40}vh`;
-    el.style.animationDuration = `${Math.random() * 0.6 + 0.3}s`;
-    el.style.opacity = Math.random() * 0.7 + 0.3;
+    el.style.cssText = `left:${Math.random()*60}vw;top:${Math.random()*40}vh;animation-duration:${Math.random()*.5+.3}s;opacity:${Math.random()*.6+.4}`;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1000);
-    setTimeout(shoot, Math.random() * 15000 + 10000);
+    setTimeout(() => el.remove(), 900);
+    setTimeout(shoot, Math.random()*18000 + 8000);
   };
-  setTimeout(shoot, 3000);
+  setTimeout(shoot, 4000);
 }
 
-// ─── CURSOR GLOW on CARDS ───
-function initCursorGlow() {
-  if (window.innerWidth < 768) return;
-  document.addEventListener('mousemove', e => {
-    document.querySelectorAll('.tile, .gem, .ins-card, .rp-card, .prof-sec').forEach(el => {
-      const rect  = el.getBoundingClientRect();
-      if (e.clientX < rect.left-100 || e.clientX > rect.right+100) return;
-      el.style.setProperty('--mx', `${e.clientX - rect.left}px`);
-      el.style.setProperty('--my', `${e.clientY - rect.top}px`);
-    });
-  });
-}
-
-// ─── BLOOM ASSISTANT (smart navigator) ───
-let baHist = [];
-
-window.toggleAssistant = () => {
-  const panel = document.getElementById('ba-panel');
-  const ico   = document.getElementById('ba-toggle-ico');
-  const open  = panel.style.display === 'none';
-  panel.style.display = open ? 'block' : 'none';
-  if (ico) ico.classList.toggle('open', open);
-  if (open && !document.getElementById('ba-msgs').children.length) {
-    appendBA("hey 🌸 what do you need? you can say things like 'log my period', 'I feel anxious', 'talk to Jazz', or just tell me what's going on.", 'bot');
-  }
-};
-
-window.sendAssistant = async () => {
-  const inp  = document.getElementById('ba-in');
-  const text = inp.value.trim();
-  if (!text) return;
-  inp.value = '';
-  appendBA(text, 'user');
-  baHist.push({role:'user', content:text});
-  const typ = appendBATyping();
+// ─── PLAYLIST MOOD GENERATOR ───
+window.genPlaylist = async () => {
+  const moodVal = parseFloat(document.getElementById('m-slider')?.value || '5');
+  const out = document.getElementById('playlist-out');
+  const txt = document.getElementById('playlist-txt');
+  const links = document.getElementById('playlist-links');
+  if (!out) return;
+  out.style.display = 'block';
+  txt.textContent = 'generating your playlist... 🎵';
+  links.innerHTML = '';
   try {
-    const system = `You are Bloom Assistant — a smart navigator AI inside the Bloom wellness app. 
-You understand what the user wants and either respond warmly OR trigger a navigation action.
-
-PAGES AVAILABLE: home, bots (all AI chats), cycle (diary), period (health/cycle tracker), comfort, insights, profile
-BOTS AVAILABLE: epipen (vent/argue/release), chinatsu (cycle/health mentor), jazz (mystery friend/Jayesh)
-
-RESPONSE FORMAT — always respond in JSON only:
-{
-  "message": "your warm response here",
-  "action": null OR one of: "nav:home", "nav:bots", "nav:cycle", "nav:period", "nav:comfort", "nav:insights", "nav:profile", "bot:epipen", "bot:chinatsu", "bot:jazz", "open:moodgate", "open:visionboard"
-}
-
-RULES:
-- "log period / mark period / period started" → action: "nav:period"  
-- "feel anxious / need to vent / having a bad day / talk to epipen" → action: "bot:epipen"
-- "talk to jazz / jazz" → action: "bot:jazz"
-- "cycle / health / body / chinatsu / symptoms" → action: "nav:period"
-- "diary / write / journal" → action: "nav:cycle"
-- "comfort / cheer me up / meme" → action: "nav:comfort"
-- "mood / how am I / vibe check" → action: "open:moodgate"
-- "vision board / dreams / goals" → action: "open:visionboard"
-- "insights / stats / graph" → action: "nav:insights"
-- "settings / profile / theme" → action: "nav:profile"
-- For general emotional support: direct to epipen
-- Keep messages short, warm, Hinglish ok
-- You are ${uData.name||"her"} personal guide. Know her: Day ${cycleInfo.day||"?"} cycle, ${cycleInfo.phaseName||"unknown"} phase.`;
-
-    const msgs   = [{role:'system',content:system}, ...baHist.slice(-6)];
-    const raw    = await groqMsgs(msgs, 0.7, 200, MODEL_VENT);
-    typ.remove();
-
-    let parsed;
-    try { parsed = JSON.parse(raw.replace(/```json|```/g,'')); }
-    catch { parsed = {message: raw, action: null}; }
-
-    appendBA(parsed.message || raw, 'bot');
-    baHist.push({role:'assistant', content:parsed.message||raw});
-
-    // execute action after short delay
-    if (parsed.action) {
-      setTimeout(() => executeBAAction(parsed.action), 600);
-    }
-  } catch(e) {
-    typ.remove();
-    appendBA("oops, something went wrong — try again? 🌸", 'bot');
-    console.error(e);
+    const prompt = `Generate a perfect playlist search query for someone in the ${cycleInfo.phaseName||"luteal"} phase of their cycle, feeling ${moodVal}/10, who loves ${uData.name||"music"}. Give: 1 mood label (e.g. "melancholic indie"), 1 Spotify search query (5-8 words), 1 YouTube search query (5-8 words). Format EXACTLY as JSON: {"mood":"...","spotify":"...","youtube":"..."}`;
+    const raw    = await groq(prompt, 0.9, 120, MODEL_VENT);
+    const data   = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    txt.textContent = `vibe: ${data.mood} 🎵`;
+    const spotLink = `https://open.spotify.com/search/${encodeURIComponent(data.spotify)}`;
+    const ytLink   = `https://www.youtube.com/results?search_query=${encodeURIComponent(data.youtube)}`;
+    links.innerHTML = `
+      <a href="${spotLink}" target="_blank" class="pl-link pl-spotify">🎧 Spotify</a>
+      <a href="${ytLink}" target="_blank" class="pl-link pl-youtube">▶️ YouTube</a>`;
+  } catch {
+    txt.textContent = 'try again 🎵';
   }
 };
 
-function executeBAAction(action) {
-  haptic([8,40,8]);
-  if (action.startsWith('nav:')) {
-    const page = action.split(':')[1];
-    const navIdx = ['home','bots','cycle','period','comfort','insights','profile'].indexOf(page);
-    const navEl  = navIdx >= 0 ? document.querySelector(`.ni:nth-child(${navIdx+1})`) : null;
-    navTo(page, navEl);
-  } else if (action.startsWith('bot:')) {
-    const bot = action.split(':')[1];
-    quickOpenBot(bot);
-  } else if (action === 'open:moodgate') {
-    openGate();
-  } else if (action === 'open:visionboard') {
-    document.getElementById('vision-modal').style.display = 'flex';
+// ─── SLEEP TRACKER ───
+let sleepQuality = null;
+window.setSleepQ = (btn, q) => {
+  document.querySelectorAll('.sq-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); sleepQuality = q;
+};
+
+window.saveSleep = async () => {
+  const hrs  = parseFloat(document.getElementById('sleep-hrs')?.value || '0');
+  if (!hrs) { toast('enter sleep hours first 🌙'); return; }
+  const data = { hours: hrs, quality: sleepQuality, phase: cycleInfo.phaseName, date: today(), ts: Date.now() };
+  await setDoc(doc(db,'cycle',user.uid,'sleep',today()), data).catch(()=>{});
+  const tipEl = document.getElementById('sleep-chi-tip');
+  if (tipEl) {
+    tipEl.textContent = 'Chinatsu is analyzing... 🌿';
+    try {
+      const tip = await groq(`Someone slept ${hrs} hours with ${sleepQuality||"unknown"} quality during their ${cycleInfo.phaseName||"luteal"} phase. Give a warm specific 2-sentence response connecting their sleep to their cycle phase. No pregnancy references. Sound like a caring mentor.`, 0.82, 120, MODEL_VENT);
+      tipEl.textContent = tip;
+    } catch { tipEl.textContent = `${hrs < 6 ? "please try to sleep more — your body needs it during this phase 🌙" : "great job resting! sleep is so important for your cycle 🌿"}`; }
   }
+  toast('sleep logged 🌙');
+};
+
+// ─── MEMORY JAR ───
+let memoryJar = [];
+
+async function loadMemoryJar() {
+  try {
+    const snap = await getDocs(query(collection(db,'users',user.uid,'memory_jar'), orderBy('ts','desc'), limit(20)));
+    memoryJar = []; snap.forEach(d => memoryJar.push({id:d.id, ...d.data()}));
+    renderMemoryJar();
+  } catch {}
 }
 
-function appendBA(text, who) {
-  const c   = document.getElementById('ba-msgs');
+function renderMemoryJar() {
+  const wrap = document.getElementById('memory-jar-list');
+  if (!wrap) return;
+  if (!memoryJar.length) { wrap.innerHTML='<p class="empty">save messages that touch your heart 💛</p>'; return; }
+  wrap.innerHTML = memoryJar.map(m => `
+    <div class="mem-item">
+      <div class="mem-bot">${m.bot||'epipen'} · ${m.date||''}</div>
+      ${m.text}
+      <button class="mem-del" onclick="deleteMemory('${m.id}')">✕</button>
+    </div>`).join('');
+}
+
+window.saveToMemory = async (text, bot) => {
+  const ref = await addDoc(collection(db,'users',user.uid,'memory_jar'), {text, bot, date:today(), ts:Date.now()}).catch(()=>null);
+  if (ref) { memoryJar.unshift({id:ref.id, text, bot, date:today()}); renderMemoryJar(); toast('saved to memory jar 💛'); haptic([10,30,10]); }
+};
+
+window.deleteMemory = async id => {
+  await deleteDoc(doc(db,'users',user.uid,'memory_jar',id)).catch(()=>{});
+  memoryJar = memoryJar.filter(m=>m.id!==id); renderMemoryJar();
+};
+
+// add save button to messages
+function addSaveBtn(msgEl, text, bot) {
+  const btn = document.createElement('button');
+  btn.style.cssText = 'background:none;border:none;color:rgba(155,111,212,.4);cursor:pointer;font-size:.7rem;padding:2px 4px;margin-left:4px;transition:color .2s;float:right;';
+  btn.textContent = '💛';
+  btn.title = 'save to memory';
+  btn.onclick = e => { e.stopPropagation(); saveToMemory(text, bot); btn.style.color='rgba(240,176,96,.9)'; };
+  msgEl.appendChild(btn);
+}
+
+// patch appendBotMsg to add save button for bot messages
+const _origAppendBotMsg = window.appendBotMsg;
+window.appendBotMsg = (text, who, bot) => {
+  const c   = document.getElementById(`msgs-${bot}`);
   const div = document.createElement('div');
-  div.className = who === 'user' ? 'ba-msg-user' : 'ba-msg-bot';
+  const botClass = bot === 'jazz' ? 'jazz-msg' : 'epi-msg';
+  div.className = `msg ${who==='user' ? 'user-msg' : botClass}`;
   div.textContent = text;
+  if (who === 'bot') addSaveBtn(div, text, bot);
   c.appendChild(div); c.scrollTop = c.scrollHeight;
+};
+
+// ─── MOOD WEATHER FORECAST ───
+async function loadMoodWeather() {
+  const wrap = document.getElementById('mood-weather');
+  if (!wrap || !cycleInfo.day) return;
+  const days = [];
+  const phases = uData.phases || {mens:5, foll:8, ov:3};
+  const len   = uData.cycleLength || 28;
+  for (let i = 0; i < 4; i++) {
+    const futureDay  = ((cycleInfo.day + i - 1) % len) + 1;
+    const mensEnd    = phases.mens, follEnd = mensEnd+phases.foll, ovEnd = follEnd+phases.ov;
+    let icon, label;
+    if (futureDay<=mensEnd)      { icon='🌧️'; label='rest mode'; }
+    else if (futureDay<=follEnd) { icon='🌱'; label='rising energy'; }
+    else if (futureDay<=ovEnd)   { icon='☀️'; label='peak glow'; }
+    else if (len-futureDay<=4)   { icon='🌊'; label='emotional'; }
+    else                         { icon='🌙'; label='inward flow'; }
+    const dayLabel = i===0?'today':i===1?'tomorrow':`day +${i}`;
+    days.push({dayLabel, icon, label});
+  }
+  wrap.innerHTML = days.map(d => `
+    <div class="weather-day">
+      <div class="wd-day">${d.dayLabel}</div>
+      <div class="wd-ico">${d.icon}</div>
+      <div class="wd-mood">${d.label}</div>
+    </div>`).join('');
 }
 
-function appendBATyping() {
-  const c   = document.getElementById('ba-msgs');
-  const div = document.createElement('div');
-  div.className = 'ba-msg-bot typing';
-  div.innerHTML = '<div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div>';
-  c.appendChild(div); c.scrollTop = c.scrollHeight;
-  return div;
+// ─── STREAK REWARDS ───
+function checkStreakReward(streak) {
+  const milestones = {7:'week one down 🔥', 14:'two weeks of showing up 💜', 30:'a whole month. literally insane. 🌸'};
+  if (!milestones[streak]) return;
+  const pop = document.createElement('div');
+  pop.className = 'streak-reward';
+  pop.innerHTML = `<div class="sr-card">
+    <span class="sr-ico">${streak===7?'🔥':streak===14?'💜':'🌸'}</span>
+    <div class="sr-title">${streak} day streak!</div>
+    <p class="sr-msg" id="sr-ai-msg">${milestones[streak]}</p>
+    <button class="b-btn" onclick="this.closest('.streak-reward').remove()">thank you 🌸</button>
+  </div>`;
+  document.body.appendChild(pop);
+  haptic([50,30,50,30,100]);
+  // get AI message
+  groq(`Write a SHORT hype message (2 sentences) for someone who just hit a ${streak}-day streak on a wellness app. Epipen energy — warm under sarcasm, Hinglish ok. Make them feel like the main character.`, 0.9, 80, MODEL_VENT)
+    .then(msg => { const el=document.getElementById('sr-ai-msg'); if(el) el.textContent=msg; }).catch(()=>{});
+}
+
+// ─── DAILY CHALLENGE ───
+async function loadDailyChallenge() {
+  const el = document.getElementById('challenge-txt');
+  const done = document.getElementById('challenge-done');
+  if (!el) return;
+  // check if already done today
+  try {
+    const snap = await getDoc(doc(db,'users',user.uid,'challenges',today()));
+    if (snap.exists() && snap.data().done) {
+      el.textContent = snap.data().challenge || 'challenge completed! 🌸';
+      if (done) done.textContent = '✓ done today 🌸';
+      return;
+    }
+    // generate or use cached
+    let challenge = snap.exists() ? snap.data().challenge : null;
+    if (!challenge) {
+      challenge = await groq(`Give ONE tiny wellness challenge for today for someone in their ${cycleInfo.phaseName||"luteal"} phase. Examples: "drink 8 glasses of water", "10 min walk outside", "write 3 things you're grateful for", "stretch for 5 minutes". Make it specific and doable. Just the challenge text, no preamble. Max 10 words.`, 0.85, 50, MODEL_VENT);
+      await setDoc(doc(db,'users',user.uid,'challenges',today()), {challenge, done:false, date:today()}).catch(()=>{});
+    }
+    el.textContent = challenge;
+  } catch { el.textContent = 'drink a full glass of water right now 💧'; }
+}
+
+window.completeChallenge = async () => {
+  await setDoc(doc(db,'users',user.uid,'challenges',today()), {done:true, date:today()}, {merge:true}).catch(()=>{});
+  const done = document.getElementById('challenge-done');
+  if (done) { done.textContent = '✓ done! 🌸'; done.style.background='rgba(113,178,128,.25)'; done.style.borderColor='rgba(113,178,128,.5)'; }
+  haptic([10,30,10]); toast('challenge complete 🌸');
+};
+
+// ─── SEARCH IN CHAT ───
+window.searchChat = async (bot) => {
+  const q     = document.getElementById(`search-${bot}`)?.value.trim().toLowerCase();
+  const wrap  = document.getElementById(`search-results-${bot}`);
+  if (!q || !wrap) return;
+  wrap.innerHTML = '<div class="sess-empty">searching...</div>';
+  try {
+    const colName = bot==='epipen'?'vents':bot==='chinatsu'?'chinatsu_sessions':'jazz_sessions';
+    const snap    = await getDocs(collection(db,'sessions',user.uid,colName));
+    const results = [];
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.vent?.toLowerCase().includes(q) || data.response?.toLowerCase().includes(q)) {
+        results.push(data);
+      }
+    });
+    if (!results.length) { wrap.innerHTML='<div class="sess-empty">no results 🌸</div>'; return; }
+    wrap.innerHTML = results.slice(0,10).map(r => {
+      const dt    = new Date(r.ts).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+      const hi    = (txt, q) => txt?.replace(new RegExp(q,'gi'), m=>`<span class="sr-highlight">${m}</span>`) || '';
+      return `<div class="search-result"><div class="sr-date">${dt}</div><div class="sr-preview">${hi(r.vent?.slice(0,80),q)}</div></div>`;
+    }).join('');
+  } catch { wrap.innerHTML='<div class="sess-empty">search failed 😭</div>'; }
+};
+
+// ─── WEEKLY EPIPEN LETTER ───
+async function checkWeeklyLetter() {
+  const now   = new Date();
+  if (now.getDay() !== 0) return; // only Sunday
+  const key   = `weekly_letter_${now.getFullYear()}_${Math.ceil(now.getDate()/7)}`;
+  try {
+    const snap = await getDoc(doc(db,'users',user.uid,'meta',key));
+    if (snap.exists()) return;
+    const snap2 = await getDocs(query(collection(db,'sessions',user.uid,'vents'), orderBy('ts','desc'), limit(15)));
+    const vents = []; snap2.forEach(d => vents.push(d.data().vent?.slice(0,60)));
+    const letter = await groq(`Write a warm weekly letter from Epipen to ${uData.name||"her"}. This week she shared: ${vents.length?vents.join('; '):'not much yet'}. Review her week, acknowledge what she went through, hype her up for next week. Epipen energy — warm under sarcasm, Hinglish ok. 5-6 sentences. Sign as "Epipen 💉"`, 0.9, 320, MODEL_VENT);
+    // show as popup
+    const pop = document.createElement('div');
+    pop.style.cssText = 'position:fixed;inset:0;background:rgba(7,6,15,.88);display:flex;align-items:center;justify-content:center;z-index:800;padding:1.5rem;backdrop-filter:blur(16px)';
+    pop.innerHTML = `<div style="max-width:400px;width:100%;padding:2rem;background:linear-gradient(135deg,rgba(155,111,212,.15),rgba(232,160,200,.1));border:1px solid var(--border2);border-radius:24px;backdrop-filter:blur(28px)">
+      <p style="font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--ame2);font-weight:700;margin-bottom:.75rem">💉 weekly letter from epipen</p>
+      <p style="font-size:.9rem;color:var(--text);line-height:1.8;font-family:'DM Sans',sans-serif">${letter}</p>
+      <button style="width:100%;margin-top:1.25rem;padding:12px;background:var(--grad);border:none;border-radius:12px;color:#fff;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer" onclick="this.closest('div[style*=fixed]').remove()">love you too 💉</button>
+    </div>`;
+    document.body.appendChild(pop);
+    await setDoc(doc(db,'users',user.uid,'meta',key), {sent:true, ts:Date.now()}).catch(()=>{});
+  } catch(e) { console.warn('weekly letter:', e); }
+}
+
+// ─── PWA ───
+function initPWA() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW:', e));
+  }
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferredPrompt = e;
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'block';
+  });
+  window.installPWA = async () => {
+    if (!deferredPrompt) { toast("use browser menu → 'Add to Home Screen' 🌸"); return; }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') toast("bloom added to home screen 🌸");
+    deferredPrompt = null;
+  };
 }
 
 // ─── KAWAII THEME ───
@@ -1921,43 +2080,53 @@ window.setKawaii = (el, variant) => {
   document.body.setAttribute('data-kw', variant);
   uData.kawaiiVariant = variant;
   setDoc(doc(db,'users',user.uid), uData, {merge:true}).catch(()=>{});
-  // swap petals to kawaii emojis
-  const kawaiiEmojis = { bunny:'🐰', panda:'🐼', icecream:'🍦' };
+  const emojis = { bunny:['🐰','🌸','💕','🌷','✨'], panda:['🐼','⚫','🍃','🌿','💚'], icecream:['🍦','🍬','🍭','🌈','💜'] };
   document.querySelectorAll('.petal').forEach((p,i) => {
-    const emojis = { bunny:['🐰','🌸','💕','🌷','✨'], panda:['🐼','⚫','🍃','🌿','💚'], icecream:['🍦','🍬','🍭','🌈','💜'] };
     const pool = emojis[variant] || emojis.bunny;
     p.textContent = pool[i % pool.length];
   });
 };
 
-// patch setTheme to show kawaii picker
-const _origSetTheme = window.setTheme;
+const _origSetThemeV11 = window.setTheme;
 window.setTheme = (el, theme) => {
-  _origSetTheme(el, theme);
+  _origSetThemeV11(el, theme);
   const picker = document.getElementById('kawaii-picker');
-  if (picker) picker.style.display = theme === 'kawaii' ? 'block' : 'none';
-  if (theme === 'kawaii') {
-    // restore variant
+  if (picker) picker.style.display = theme==='kawaii' ? 'block' : 'none';
+  if (theme==='kawaii') {
     const v = uData.kawaiiVariant || 'bunny';
     document.body.setAttribute('data-kw', v);
-    document.querySelectorAll('.kw-opt').forEach(o => o.classList.toggle('active', o.dataset.kw === v));
+    document.querySelectorAll('.kw-opt').forEach(o => o.classList.toggle('active', o.dataset.kw===v));
   }
 };
 
-// ─── V10 LAUNCH PATCH ───
-const _v10patch = () => {
-  setTimeout(() => {
-    injectDesktopSidebar();
-    injectRightPanel();
-    initParallax();
-    initShootingStars();
-    initCursorGlow();
-    // restore kawaii variant
-    if (uData.theme === 'kawaii' && uData.kawaiiVariant) {
-      document.body.setAttribute('data-kw', uData.kawaiiVariant);
-    }
-  }, 800);
+// ─── DARK MODE TOGGLE ───
+window.toggleDarkMode = checked => {
+  document.body.setAttribute('data-mode', checked ? 'dark' : 'light');
+  uData.darkMode = checked;
+  setDoc(doc(db,'users',user.uid), uData, {merge:true}).catch(()=>{});
 };
 
-if (document.readyState !== 'loading') { setTimeout(_v10patch, 800); }
-else { document.addEventListener('DOMContentLoaded', () => setTimeout(_v10patch, 800)); }
+// ─── V11 LAUNCH PATCH ───
+const _v11patch = () => {
+  initPWA();
+  injectSidebar();
+  initDesktopAnimations();
+  loadMoodWeather();
+  loadDailyChallenge();
+  loadMemoryJar();
+  checkWeeklyLetter();
+  // restore kawaii
+  if (uData.theme==='kawaii' && uData.kawaiiVariant) document.body.setAttribute('data-kw', uData.kawaiiVariant);
+  // settings restore
+  const isDark = uData.darkMode !== false;
+  document.body.setAttribute('data-mode', isDark ? 'dark' : 'light');
+  const td = document.getElementById('tog-dark'); if(td) td.checked = isDark;
+  if (uData.notifs && Notification.permission==='granted') { const tn=document.getElementById('tog-notifs'); if(tn) tn.checked=true; }
+  // streak rewards
+  if (uData.streak && [7,14,30].includes(uData.streak)) {
+    setTimeout(() => checkStreakReward(uData.streak), 2000);
+  }
+};
+
+if (document.readyState !== 'loading') setTimeout(_v11patch, 600);
+else document.addEventListener('DOMContentLoaded', () => setTimeout(_v11patch, 600));
