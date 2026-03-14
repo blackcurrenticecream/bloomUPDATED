@@ -2056,24 +2056,6 @@ async function checkWeeklyLetter() {
 }
 
 // ─── PWA ───
-function initPWA() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW:', e));
-  }
-  let deferredPrompt = null;
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault(); deferredPrompt = e;
-    const btn = document.getElementById('install-btn');
-    if (btn) btn.style.display = 'block';
-  });
-  window.installPWA = async () => {
-    if (!deferredPrompt) { toast("use browser menu → 'Add to Home Screen' 🌸"); return; }
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') toast("bloom added to home screen 🌸");
-    deferredPrompt = null;
-  };
-}
 
 // ─── KAWAII THEME ───
 window.setKawaii = (el, variant) => {
