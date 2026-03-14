@@ -1,17 +1,21 @@
 {
   "name": "Bloom by Unravel Labs",
-  "short_name": "Bloom",
+  "short_name": "Bloom 🌸",
   "description": "Your precious sanctuary. You bloom with dignity.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#07060f",
   "theme_color": "#9b6fd4",
-  "orientation": "portrait-primary",
+  "orientation": "any",
+  "lang": "en-IN",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
-  "screenshots": [],
-  "categories": ["health", "lifestyle"],
-  "lang": "en"
+  "categories": ["health", "lifestyle", "wellness"],
+  "prefer_related_applications": false
 }

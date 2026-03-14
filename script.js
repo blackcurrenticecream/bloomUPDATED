@@ -17,7 +17,6 @@ const firebaseConfig = {
 };
 
 const GROQ_API_KEY = "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";
-
 const MODEL_VENT     = "meta-llama/llama-4-scout-17b-16e-instruct";
 const MODEL_ARGUE    = "moonshotai/kimi-k2-instruct";
 const MODEL_FALLBACK = "llama-3.3-70b-versatile";
@@ -298,6 +297,7 @@ window.submitMood = async () => {
     const pop = document.getElementById("mood-pop");
     document.getElementById("mood-pop-txt").textContent = res;
     pop.style.display = "block";
+    pop.style.cssText += ";position:fixed;bottom:calc(env(safe-area-inset-bottom) + 5.5rem);left:1rem;right:1rem;max-width:560px;margin:0 auto;z-index:250;";
     setTimeout(() => pop.style.display = "none", 6000);
   } catch {}
 };
@@ -739,7 +739,7 @@ window.openComfort=async type=>{
   const out=document.getElementById("comfort-out"),txt=document.getElementById("comfort-txt");
   out.style.display="block"; txt.innerHTML='<p style="color:var(--text3)">loading... 🌸</p>';
   if(type==="meme"){
-    try{const res=await groq(`3 funny relatable memes/jokes for a girl in her ${cycleInfo.phaseName||"cycle"} phase. She loves music, studying, skincare, burritos, anime, friends. Actually funny — dark humor, self-aware, period/life relatable. "fuck", "shit", "bitch" ok if funnier. 3 numbered jokes. Fresh and specific.`,1.0,250);txt.innerHTML=`<p style="font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ame2);font-weight:700;margin-bottom:.75rem">😭 meme therapy</p><div class="comfort-out-txt">${res}</div>`;}
+    try{const res=await groq(`3 funny relatable memes/jokes for a girl in her ${cycleInfo.phaseName||"cycle"} phase. She loves music, studying, skincare, burritos, anime, friends. Actually funny — dark humor, self-aware, life relatable. "fuck", "shit", "bitch" ok if funnier. 3 numbered jokes. NEVER joke about pregnancy, fertility, uterus, or reproductive organs. Keep it about mood, studying, food, friends, skin, life chaos. Fresh and specific.`,1.0,250);txt.innerHTML=`<p style="font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ame2);font-weight:700;margin-bottom:.75rem">😭 meme therapy</p><div class="comfort-out-txt">${res}</div>`;}
     catch{txt.innerHTML="<p>couldn't load memes 😭</p>";}
   }
   if(type==="surprise"){
@@ -927,7 +927,7 @@ async function loadChiHomeWidget() {
   if (!el) return;
   try {
     const tip = await groq(
-      `Write ONE short sentence (max 12 words) about what's happening in ${uData.name||"her"} body today. She's on Day ${cycleInfo.day||"?"} of her cycle in the ${cycleInfo.phaseName||"luteal"} phase. Start with an emoji. Be specific to this phase. Warm and reassuring.`,
+      `Write ONE short warm sentence (max 12 words) about how ${uData.name||"she"} might feel today on Day ${cycleInfo.day||"?"} of her cycle (${cycleInfo.phaseName||"luteal"} phase). Focus ONLY on energy, mood, or self-care. NEVER mention pregnancy, uterus, reproductive organs, or fertility. Start with an emoji. Keep it soft and encouraging.`,
       0.85, 60, MODEL_VENT
     );
     el.textContent = tip;
@@ -1363,7 +1363,7 @@ window.toggleHistory = async bot => {
 
 // ─── JAZZ RANDOM CHECK-INS ───
 function scheduleJazzCheckin() {
-  const delay = (Math.random() * 60 + 30) * 60 * 1000; // 30-90 min
+  const delay = (Math.random() * 60 + 60) * 1000; // 1-2 min
   setTimeout(async () => {
     if (document.getElementById('pg-bots')?.classList.contains('active')) { scheduleJazzCheckin(); return; }
     try {
@@ -1403,10 +1403,23 @@ const chinatsuAdvices = [
   "your posture rn — sit up a little. neck pain during your period hits different and you don't need that 💆",
   "taking a 10-minute walk literally reduces cortisol. not fitness advice. stress science. 🚶",
   "if you're feeling extra emotional today, check your cycle day. it might just be your hormones doing their thing. valid. 🌊",
+  "magnesium literally helps with cramps and mood swings. dark chocolate has it. you're welcome. 🍫",
+  "deep breath in for 4 counts, hold 4, out for 6. do it 3 times. your nervous system will thank you. 🌬️",
+  "your skin might be acting up this week — that's hormonal. be gentle with your routine. 💅",
+  "even 20 minutes of sunlight today will genuinely improve your mood. science, not vibes. ☀️",
+  "stretching for 5 minutes before bed reduces muscle tension and helps you sleep deeper. try it tonight. 🧘",
+  "if you're craving carbs rn it's probably your cycle asking for serotonin. eat something good. 🍝",
+  "cold water on your wrists when you feel anxious. instant nervous system reset. 💧",
+  "your body is doing so much right now. even resting is productive. please don't forget that. 🌸",
+  "iron-rich foods this week will help with energy if you're in your Womenstrual phase. spinach, lentils, dark chocolate. 🥬",
+  "screen brightness down at night. your melatonin will actually kick in and you'll sleep better. 🌙",
+  "if your head hurts, drink a full glass of water before anything else. dehydration causes 90% of headaches. 💧",
+  "you've been going hard. it's okay to have one slow hour. the world won't end. 🌷",
+  "omega-3s reduce inflammation including period pain. even a small handful of walnuts helps. 🥜",
 ];
 
 function scheduleChiAdvice() {
-  const delay = (Math.random() * 45 + 25) * 60 * 1000;
+  const delay = (Math.random() * 60 + 60) * 1000; // 1-2 min
   setTimeout(() => {
     const msg = chinatsuAdvices[Math.floor(Math.random() * chinatsuAdvices.length)];
     showChiAdvice(msg);
@@ -1589,9 +1602,22 @@ const _v9patch = () => {
   setTimeout(loadSelfInfo, 1000);
   setTimeout(loadVisionBoard, 2000);
   // dark mode restore
-  if (uData.darkMode === false) { document.body.setAttribute('data-mode','light'); const tog=document.getElementById('tog-dark'); if(tog)tog.checked=false; }
+  const isDark = uData.darkMode !== false;
+  document.body.setAttribute('data-mode', isDark ? 'dark' : 'light');
+  const togDark = document.getElementById('tog-dark');
+  if (togDark) togDark.checked = isDark;
   // notifs restore
-  if (uData.notifs && Notification.permission==='granted') { const tog=document.getElementById('tog-notifs'); if(tog)tog.checked=true; }
+  if (uData.notifs && Notification.permission==='granted') {
+    const tog=document.getElementById('tog-notifs'); if(tog)tog.checked=true;
+  }
+  // checkin restore
+  if (uData.settings?.checkin !== undefined) {
+    const tc = document.getElementById('tog-checkin'); if(tc) tc.checked = uData.settings.checkin;
+  }
+  // compliments restore
+  if (uData.settings?.compliments !== undefined) {
+    const tco = document.getElementById('tog-compliments'); if(tco) tco.checked = uData.settings.compliments;
+  }
 };
 
 // run after launch — attach to DOMContentLoaded as extra safety
@@ -1616,3 +1642,322 @@ window.sendBotMsg = async bot => {
   }
   return _origSendBotMsg(bot);
 };
+
+// ═══════════════════════════════════════════
+// BLOOM V10 ADDITIONS
+// ═══════════════════════════════════════════
+
+// ─── DESKTOP SIDEBAR BRAND + PROFILE ───
+function injectDesktopSidebar() {
+  if (window.innerWidth < 768) return;
+  const nav = document.getElementById('main-nav');
+  if (!nav || document.querySelector('.nav-brand')) return;
+
+  // brand at top
+  const brand = document.createElement('div');
+  brand.className = 'nav-brand';
+  brand.innerHTML = `<span class="nav-brand-logo">bloom 🌸</span><span class="nav-brand-tag">you bloom with dignity</span>`;
+  nav.insertBefore(brand, nav.firstChild);
+
+  // profile footer at bottom
+  const footer = document.createElement('div');
+  footer.className = 'nav-footer';
+  const avatarSrc = uData.photoURL;
+  footer.innerHTML = `
+    ${avatarSrc ? `<img class="nav-footer-av" src="${avatarSrc}" alt="pfp"/>` : `<div class="nav-footer-av" style="background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700">${(uData.name||'B')[0].toUpperCase()}</div>`}
+    <div style="flex:1;min-width:0">
+      <div class="nav-footer-name">${uData.name||'bestie'}</div>
+      <div class="nav-footer-streak">🔥 ${uData.streak||0} day streak</div>
+    </div>`;
+  nav.appendChild(footer);
+}
+
+// ─── RIGHT CONTEXTUAL PANEL ───
+function injectRightPanel() {
+  if (window.innerWidth < 1100) return;
+  if (document.querySelector('.right-panel')) return;
+  const shell = document.querySelector('.shell');
+  if (!shell) return;
+
+  const rp = document.createElement('div');
+  rp.className = 'right-panel';
+  rp.id = 'right-panel';
+  rp.innerHTML = `
+    <div class="rp-section">
+      <p class="rp-title">📍 your cycle</p>
+      <div class="rp-card">
+        <div class="rp-phase-day" id="rp-day">Day —</div>
+        <div class="rp-phase-name" id="rp-phase">—</div>
+        <div class="rp-phase-next" id="rp-next">—</div>
+      </div>
+    </div>
+    <div class="rp-section">
+      <p class="rp-title">😊 mood this week</p>
+      <canvas class="rp-mini-graph" id="rp-graph"></canvas>
+    </div>
+    <div class="rp-section">
+      <p class="rp-title">🌿 chinatsu says</p>
+      <div class="rp-card">
+        <div class="rp-tip-label">today's tip</div>
+        <p class="rp-tip" id="rp-tip">loading...</p>
+      </div>
+    </div>
+    <div class="rp-section" style="margin-top:auto;padding-top:1rem;border-top:1px solid var(--border)">
+      <p style="font-size:.5rem;color:rgba(155,111,212,.2);letter-spacing:.5px;text-align:center">made by jayesh · for the special one</p>
+      <p style="font-size:.58rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;text-align:center;margin-top:.25rem">Bloom · Unravel Labs</p>
+    </div>`;
+  shell.appendChild(rp);
+  updateRightPanel();
+}
+
+function updateRightPanel() {
+  const d   = document.getElementById('rp-day');
+  const ph  = document.getElementById('rp-phase');
+  const nx  = document.getElementById('rp-next');
+  const tip = document.getElementById('rp-tip');
+  if (d)  d.textContent  = `Day ${cycleInfo.day||'—'}`;
+  if (ph) ph.textContent = cycleInfo.phaseName||'—';
+  if (nx && cycleInfo.day && cycleInfo.len) {
+    const left = cycleInfo.len - cycleInfo.day;
+    nx.textContent = left === 0 ? 'period may start today' : `next period in ${left}d`;
+  }
+  // mini mood graph
+  const canvas = document.getElementById('rp-graph');
+  if (canvas && user) {
+    getDocs(query(collection(db,'mood_logs',user.uid,'entries'), orderBy('ts','desc'), limit(7)))
+      .then(snap => {
+        const entries = []; snap.forEach(d => entries.push(d.data())); entries.reverse();
+        drawMiniGraph(canvas, entries);
+      }).catch(()=>{});
+  }
+  // tip
+  if (tip && cycleInfo.phaseName) {
+    groq(`One very short (max 10 words) wellness tip for the ${cycleInfo.phaseName} phase. Start with emoji. No pregnancy/uterus references.`, 0.8, 40, MODEL_VENT)
+      .then(t => { if(tip) tip.textContent = t; }).catch(()=>{});
+  }
+}
+
+function drawMiniGraph(canvas, entries) {
+  const ctx = canvas.getContext('2d');
+  const W   = canvas.offsetWidth || 260, H = 60;
+  canvas.width  = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  ctx.clearRect(0, 0, W, H);
+  if (!entries.length) return;
+  const scores = entries.map(e => e.score||5);
+  const pts    = scores.map((s,i) => ({ x: (i/(Math.max(scores.length-1,1)))*W, y: H - ((s-1)/9)*H*0.8 - H*0.1 }));
+  const grad   = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(155,111,212,.3)'); grad.addColorStop(1,'rgba(155,111,212,0)');
+  ctx.beginPath(); ctx.moveTo(pts[0].x, H);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pts[pts.length-1].x, H); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath(); pts.forEach((p,i) => i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle = 'rgba(155,111,212,.8)'; ctx.lineWidth = 2; ctx.stroke();
+}
+
+// ─── PARALLAX STARS ───
+function initParallax() {
+  if (window.innerWidth < 768) return;
+  const canvas = document.getElementById('stars');
+  window.addEventListener('mousemove', e => {
+    const mx = (e.clientX / window.innerWidth  - 0.5) * 2;
+    const my = (e.clientY / window.innerHeight - 0.5) * 2;
+    if (canvas) {
+      canvas.style.transform = `translate(${mx * 8}px, ${my * 5}px)`;
+    }
+    // cursor glow on cards
+    document.querySelectorAll('.cursor-glow-card, .tile, .gem, .ins-card').forEach(el => {
+      const rect = el.getBoundingClientRect();
+      const x    = e.clientX - rect.left;
+      const y    = e.clientY - rect.top;
+      el.style.setProperty('--mx', `${x}px`);
+      el.style.setProperty('--my', `${y}px`);
+    });
+  });
+}
+
+// ─── SHOOTING STARS ───
+function initShootingStars() {
+  if (window.innerWidth < 768) return;
+  const shoot = () => {
+    const el   = document.createElement('div');
+    el.className = 'shooting-star';
+    el.style.left = `${Math.random() * 60}vw`;
+    el.style.top  = `${Math.random() * 40}vh`;
+    el.style.animationDuration = `${Math.random() * 0.6 + 0.3}s`;
+    el.style.opacity = Math.random() * 0.7 + 0.3;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+    setTimeout(shoot, Math.random() * 15000 + 10000);
+  };
+  setTimeout(shoot, 3000);
+}
+
+// ─── CURSOR GLOW on CARDS ───
+function initCursorGlow() {
+  if (window.innerWidth < 768) return;
+  document.addEventListener('mousemove', e => {
+    document.querySelectorAll('.tile, .gem, .ins-card, .rp-card, .prof-sec').forEach(el => {
+      const rect  = el.getBoundingClientRect();
+      if (e.clientX < rect.left-100 || e.clientX > rect.right+100) return;
+      el.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+      el.style.setProperty('--my', `${e.clientY - rect.top}px`);
+    });
+  });
+}
+
+// ─── BLOOM ASSISTANT (smart navigator) ───
+let baHist = [];
+
+window.toggleAssistant = () => {
+  const panel = document.getElementById('ba-panel');
+  const ico   = document.getElementById('ba-toggle-ico');
+  const open  = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  if (ico) ico.classList.toggle('open', open);
+  if (open && !document.getElementById('ba-msgs').children.length) {
+    appendBA("hey 🌸 what do you need? you can say things like 'log my period', 'I feel anxious', 'talk to Jazz', or just tell me what's going on.", 'bot');
+  }
+};
+
+window.sendAssistant = async () => {
+  const inp  = document.getElementById('ba-in');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  appendBA(text, 'user');
+  baHist.push({role:'user', content:text});
+  const typ = appendBATyping();
+  try {
+    const system = `You are Bloom Assistant — a smart navigator AI inside the Bloom wellness app. 
+You understand what the user wants and either respond warmly OR trigger a navigation action.
+
+PAGES AVAILABLE: home, bots (all AI chats), cycle (diary), period (health/cycle tracker), comfort, insights, profile
+BOTS AVAILABLE: epipen (vent/argue/release), chinatsu (cycle/health mentor), jazz (mystery friend/Jayesh)
+
+RESPONSE FORMAT — always respond in JSON only:
+{
+  "message": "your warm response here",
+  "action": null OR one of: "nav:home", "nav:bots", "nav:cycle", "nav:period", "nav:comfort", "nav:insights", "nav:profile", "bot:epipen", "bot:chinatsu", "bot:jazz", "open:moodgate", "open:visionboard"
+}
+
+RULES:
+- "log period / mark period / period started" → action: "nav:period"  
+- "feel anxious / need to vent / having a bad day / talk to epipen" → action: "bot:epipen"
+- "talk to jazz / jazz" → action: "bot:jazz"
+- "cycle / health / body / chinatsu / symptoms" → action: "nav:period"
+- "diary / write / journal" → action: "nav:cycle"
+- "comfort / cheer me up / meme" → action: "nav:comfort"
+- "mood / how am I / vibe check" → action: "open:moodgate"
+- "vision board / dreams / goals" → action: "open:visionboard"
+- "insights / stats / graph" → action: "nav:insights"
+- "settings / profile / theme" → action: "nav:profile"
+- For general emotional support: direct to epipen
+- Keep messages short, warm, Hinglish ok
+- You are ${uData.name||"her"} personal guide. Know her: Day ${cycleInfo.day||"?"} cycle, ${cycleInfo.phaseName||"unknown"} phase.`;
+
+    const msgs   = [{role:'system',content:system}, ...baHist.slice(-6)];
+    const raw    = await groqMsgs(msgs, 0.7, 200, MODEL_VENT);
+    typ.remove();
+
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/```json|```/g,'')); }
+    catch { parsed = {message: raw, action: null}; }
+
+    appendBA(parsed.message || raw, 'bot');
+    baHist.push({role:'assistant', content:parsed.message||raw});
+
+    // execute action after short delay
+    if (parsed.action) {
+      setTimeout(() => executeBAAction(parsed.action), 600);
+    }
+  } catch(e) {
+    typ.remove();
+    appendBA("oops, something went wrong — try again? 🌸", 'bot');
+    console.error(e);
+  }
+};
+
+function executeBAAction(action) {
+  haptic([8,40,8]);
+  if (action.startsWith('nav:')) {
+    const page = action.split(':')[1];
+    const navIdx = ['home','bots','cycle','period','comfort','insights','profile'].indexOf(page);
+    const navEl  = navIdx >= 0 ? document.querySelector(`.ni:nth-child(${navIdx+1})`) : null;
+    navTo(page, navEl);
+  } else if (action.startsWith('bot:')) {
+    const bot = action.split(':')[1];
+    quickOpenBot(bot);
+  } else if (action === 'open:moodgate') {
+    openGate();
+  } else if (action === 'open:visionboard') {
+    document.getElementById('vision-modal').style.display = 'flex';
+  }
+}
+
+function appendBA(text, who) {
+  const c   = document.getElementById('ba-msgs');
+  const div = document.createElement('div');
+  div.className = who === 'user' ? 'ba-msg-user' : 'ba-msg-bot';
+  div.textContent = text;
+  c.appendChild(div); c.scrollTop = c.scrollHeight;
+}
+
+function appendBATyping() {
+  const c   = document.getElementById('ba-msgs');
+  const div = document.createElement('div');
+  div.className = 'ba-msg-bot typing';
+  div.innerHTML = '<div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div>';
+  c.appendChild(div); c.scrollTop = c.scrollHeight;
+  return div;
+}
+
+// ─── KAWAII THEME ───
+window.setKawaii = (el, variant) => {
+  document.querySelectorAll('.kw-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  document.body.setAttribute('data-kw', variant);
+  uData.kawaiiVariant = variant;
+  setDoc(doc(db,'users',user.uid), uData, {merge:true}).catch(()=>{});
+  // swap petals to kawaii emojis
+  const kawaiiEmojis = { bunny:'🐰', panda:'🐼', icecream:'🍦' };
+  document.querySelectorAll('.petal').forEach((p,i) => {
+    const emojis = { bunny:['🐰','🌸','💕','🌷','✨'], panda:['🐼','⚫','🍃','🌿','💚'], icecream:['🍦','🍬','🍭','🌈','💜'] };
+    const pool = emojis[variant] || emojis.bunny;
+    p.textContent = pool[i % pool.length];
+  });
+};
+
+// patch setTheme to show kawaii picker
+const _origSetTheme = window.setTheme;
+window.setTheme = (el, theme) => {
+  _origSetTheme(el, theme);
+  const picker = document.getElementById('kawaii-picker');
+  if (picker) picker.style.display = theme === 'kawaii' ? 'block' : 'none';
+  if (theme === 'kawaii') {
+    // restore variant
+    const v = uData.kawaiiVariant || 'bunny';
+    document.body.setAttribute('data-kw', v);
+    document.querySelectorAll('.kw-opt').forEach(o => o.classList.toggle('active', o.dataset.kw === v));
+  }
+};
+
+// ─── V10 LAUNCH PATCH ───
+const _v10patch = () => {
+  setTimeout(() => {
+    injectDesktopSidebar();
+    injectRightPanel();
+    initParallax();
+    initShootingStars();
+    initCursorGlow();
+    // restore kawaii variant
+    if (uData.theme === 'kawaii' && uData.kawaiiVariant) {
+      document.body.setAttribute('data-kw', uData.kawaiiVariant);
+    }
+  }, 800);
+};
+
+if (document.readyState !== 'loading') { setTimeout(_v10patch, 800); }
+else { document.addEventListener('DOMContentLoaded', () => setTimeout(_v10patch, 800)); }

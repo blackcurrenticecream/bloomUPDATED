@@ -7,12 +7,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
-  <link rel="manifest" href="manifest.json"/>
+  <link rel="manifest" href="/manifest.json"/>
   <meta name="theme-color" content="#9b6fd4"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="Bloom"/>
-  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png"/>
+  <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png"/>
+  <link rel="shortcut icon" href="/icon-192.png"/>
 </head>
 <body>
 
@@ -173,11 +176,26 @@
           </div>
         </div>
 
-        <button class="epi-pill" id="epi-pill" onclick="quickOpenBot('epipen')">
-          <span id="epi-pill-ico">💉</span>
-          <span id="epi-pill-name">Epipen</span>
-          <span class="epi-pill-pulse"></span>
-        </button>
+        <!-- Bloom Assistant -->
+        <div class="bloom-assistant-wrap">
+          <div class="ba-header" onclick="toggleAssistant()">
+            <div class="ba-left">
+              <div class="ba-orb" id="ba-orb">✨</div>
+              <div>
+                <p class="ba-name">Bloom Assistant</p>
+                <p class="ba-sub">ask me anything or tell me where to go</p>
+              </div>
+            </div>
+            <span class="ba-toggle-ico" id="ba-toggle-ico">›</span>
+          </div>
+          <div id="ba-panel" class="ba-panel" style="display:none">
+            <div id="ba-msgs" class="ba-msgs"></div>
+            <div class="ba-input-row">
+              <input id="ba-in" class="mc-in" type="text" placeholder="log my period, talk to Jazz, I feel anxious..."/>
+              <button class="mc-send" onclick="sendAssistant()">→</button>
+            </div>
+          </div>
+        </div>
 
         <div id="compliment" class="compliment-bar" style="display:none">
           <span id="compliment-txt"></span>
@@ -521,12 +539,7 @@
           <textarea id="skin-in" class="d-in" placeholder="oily, acne-prone, want glass skin, dark spots..."></textarea>
           <button class="b-btn" onclick="genGlow()">Build My Routine ✨</button>
         </div>
-        <div id="dream-setup" class="setup-card" style="display:none">
-          <h3 class="setup-ttl">🌠 Dream Fuel</h3>
-          <p class="setup-hint">what kind of woman do you aspire to be?</p>
-          <textarea id="dream-in" class="d-in" placeholder="baddie with abs, travelling the world..."></textarea>
-          <button class="b-btn" onclick="genDream()">Fuel Me 🔥</button>
-        </div>
+<!-- dream fuel now in modal only -->
         <div id="comfort-out" class="comfort-out" style="display:none"><div id="comfort-txt"></div></div>
       </div>
 
@@ -606,6 +619,14 @@
             <label class="field-lbl">Cycle Start Date</label><input id="edit-cycle" class="b-input" type="date"/>
             <label class="field-lbl">Cycle Length (days)</label><input id="edit-len" class="b-input" type="number" min="13" max="50" placeholder="28"/>
             <button class="b-btn" onclick="saveProf()">Save 🌸</button>
+          <div id="kawaii-picker" class="kawaii-picker" style="display:none">
+            <p class="prof-sec-ttl" style="margin-top:.75rem">🐰 kawaii palette</p>
+            <div class="kawaii-opts">
+              <div class="kw-opt active" data-kw="bunny" onclick="setKawaii(this,'bunny')">🐰 Bunny</div>
+              <div class="kw-opt" data-kw="panda" onclick="setKawaii(this,'panda')">🐼 Panda</div>
+              <div class="kw-opt" data-kw="icecream" onclick="setKawaii(this,'icecream')">🍦 Ice Cream</div>
+            </div>
+          </div>
           </div>
           <div class="prof-sec">
             <p class="prof-sec-ttl">💉 Epipen emoji</p>
@@ -629,6 +650,7 @@
               <div class="th" data-theme="midnight" onclick="setTheme(this,'midnight')" style="background:linear-gradient(135deg,#1a1a2e,#818cf8)"><span>🌌 Midnight</span></div>
               <div class="th" data-theme="forest" onclick="setTheme(this,'forest')" style="background:linear-gradient(135deg,#134e5e,#71b280)"><span>🌿 Forest</span></div>
               <div class="th" data-theme="cherry" onclick="setTheme(this,'cherry')" style="background:linear-gradient(135deg,#eb3349,#f45c43)"><span>🍒 Cherry</span></div>
+              <div class="th kawaii-th" data-theme="kawaii" onclick="setTheme(this,'kawaii')" style="background:linear-gradient(135deg,#ffb3d9,#b3e5ff,#ffe0b3)"><span>🐰 Kawaii</span></div>
             </div>
           </div>
           <div class="prof-sec">
