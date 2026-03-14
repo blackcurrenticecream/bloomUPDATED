@@ -908,12 +908,14 @@ initPetals();
 
 // ─── LOADING SCREEN ───
 function initLoadingScreen() {
+  // loading screen is dismissed by hideLoadingScreen() after auth resolves
+}
+
+function hideLoadingScreen() {
   const ls = document.getElementById("loading-screen");
-  if (!ls) return;
-  setTimeout(() => {
-    ls.classList.add("fade-out");
-    setTimeout(() => ls.classList.add("gone"), 500);
-  }, 2000);
+  if (!ls || ls.classList.contains("gone")) return;
+  ls.classList.add("fade-out");
+  setTimeout(() => ls.classList.add("gone"), 500);
 }
 
 // ─── HAPTIC ───
