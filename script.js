@@ -17,6 +17,7 @@ const firebaseConfig = {
 };
 
 const GROQ_API_KEY = "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";
+
 const MODEL_VENT     = "meta-llama/llama-4-scout-17b-16e-instruct";
 const MODEL_ARGUE    = "moonshotai/kimi-k2-instruct";
 const MODEL_FALLBACK = "llama-3.3-70b-versatile";
@@ -900,3 +901,286 @@ function toast(msg){const old=document.getElementById("bloom-toast");if(old)old.
 // ─── START ───
 initStars();
 initPetals();
+
+// ═══════════════════════════════════════════
+// BLOOM V8 ADDITIONS
+// ═══════════════════════════════════════════
+
+// ─── LOADING SCREEN ───
+function initLoadingScreen() {
+  const ls = document.getElementById("loading-screen");
+  if (!ls) return;
+  setTimeout(() => {
+    ls.classList.add("fade-out");
+    setTimeout(() => ls.classList.add("gone"), 500);
+  }, 2000);
+}
+
+// ─── HAPTIC ───
+function haptic(pattern = [10]) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
+// ─── CHINATSU HOME WIDGET ───
+async function loadChiHomeWidget() {
+  const el = document.getElementById("chw-txt");
+  if (!el) return;
+  try {
+    const tip = await groq(
+      `Write ONE short sentence (max 12 words) about what's happening in ${uData.name||"her"} body today. She's on Day ${cycleInfo.day||"?"} of her cycle in the ${cycleInfo.phaseName||"luteal"} phase. Start with an emoji. Be specific to this phase. Warm and reassuring.`,
+      0.85, 60, MODEL_VENT
+    );
+    el.textContent = tip;
+  } catch { el.textContent = `Day ${cycleInfo.day||"?"} · ${cycleInfo.phaseName||"your cycle"} ${cycleInfo.emoji||"🌸"}`; }
+}
+
+// ─── INSIGHTS PAGE ───
+window.loadInsights = async () => {
+  loadMoodGraph(document.querySelector(".ins-tab.active"), 7);
+  loadSymChart();
+  loadCycleStats();
+};
+
+window.loadMoodGraph = async (btn, days) => {
+  document.querySelectorAll(".ins-tab").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  try {
+    const q    = query(collection(db, "mood_logs", user.uid, "entries"), orderBy("ts","desc"), limit(days));
+    const snap = await getDocs(q);
+    const entries = [];
+    snap.forEach(d => entries.push(d.data()));
+    entries.reverse();
+    drawMoodGraph(entries, days);
+    showMoodStats(entries);
+  } catch { console.error("mood graph fail"); }
+};
+
+function drawMoodGraph(entries, days) {
+  const canvas = document.getElementById("mood-canvas");
+  if (!canvas) return;
+  const ctx   = canvas.getContext("2d");
+  const W     = canvas.offsetWidth || 300;
+  const H     = 120;
+  canvas.width  = W * window.devicePixelRatio;
+  canvas.height = H * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  ctx.clearRect(0, 0, W, H);
+
+  if (!entries.length) {
+    ctx.fillStyle = "rgba(255,255,255,.2)";
+    ctx.font = "14px DM Sans";
+    ctx.textAlign = "center";
+    ctx.fillText("no mood logs yet 🌸", W/2, H/2);
+    return;
+  }
+
+  const pad    = 16;
+  const gw     = W - pad*2;
+  const gh     = H - pad*2;
+  const scores = entries.map(e => e.score || 5);
+  const pts    = scores.map((s,i) => ({ x: pad + (i/(Math.max(scores.length-1,1)))*gw, y: pad + (1 - (s-1)/9)*gh }));
+
+  // gradient fill
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, "rgba(155,111,212,.25)");
+  grad.addColorStop(1, "rgba(155,111,212,0)");
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, H-pad);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pts[pts.length-1].x, H-pad);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // line
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  pts.forEach((p,i) => {
+    if (i === 0) return;
+    const prev = pts[i-1];
+    const cpx  = (prev.x+p.x)/2;
+    ctx.bezierCurveTo(cpx, prev.y, cpx, p.y, p.x, p.y);
+  });
+  ctx.strokeStyle = "rgba(155,111,212,.8)";
+  ctx.lineWidth   = 2.5;
+  ctx.stroke();
+
+  // dots
+  pts.forEach(p => {
+    ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
+    ctx.fillStyle = "rgba(232,160,200,.9)"; ctx.fill();
+  });
+
+  // labels
+  const labelsEl = document.getElementById("mood-labels");
+  if (labelsEl && entries.length) {
+    labelsEl.innerHTML = "";
+    const show = entries.length > 7 ? entries.filter((_,i) => i % Math.ceil(entries.length/7) === 0) : entries;
+    show.forEach(e => {
+      const span = document.createElement("span");
+      const d    = new Date(e.ts);
+      span.textContent = `${d.getDate()}/${d.getMonth()+1}`;
+      labelsEl.appendChild(span);
+    });
+  }
+}
+
+function showMoodStats(entries) {
+  const el = document.getElementById("mood-stats");
+  if (!el || !entries.length) return;
+  const scores = entries.map(e => e.score||5);
+  const avg    = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+  const best   = Math.max(...scores).toFixed(1);
+  const worst  = Math.min(...scores).toFixed(1);
+  el.innerHTML = `
+    <div class="mood-stat"><div class="mood-stat-val">${avg}</div><div class="mood-stat-lbl">avg mood</div></div>
+    <div class="mood-stat"><div class="mood-stat-val">${best}</div><div class="mood-stat-lbl">best day</div></div>
+    <div class="mood-stat"><div class="mood-stat-val">${worst}</div><div class="mood-stat-lbl">hardest day</div></div>
+    <div class="mood-stat"><div class="mood-stat-val">${entries.length}</div><div class="mood-stat-lbl">logs</div></div>
+  `;
+}
+
+async function loadSymChart() {
+  const wrap = document.getElementById("sym-chart");
+  if (!wrap) return;
+  try {
+    const snap = await getDocs(collection(db, "cycle", user.uid, "symptoms"));
+    const counts = {};
+    snap.forEach(d => {
+      const syms = d.data().symptoms || [];
+      syms.forEach(s => counts[s] = (counts[s]||0)+1);
+    });
+    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    if (!sorted.length) { wrap.innerHTML='<p class="empty">log symptoms to see patterns 🌸</p>'; return; }
+    const max = sorted[0][1];
+    wrap.innerHTML = sorted.map(([sym,cnt]) => `
+      <div class="sym-bar-row">
+        <span class="sym-bar-lbl">${sym}</span>
+        <div class="sym-bar-track"><div class="sym-bar-fill" style="width:${(cnt/max)*100}%"></div></div>
+        <span class="sym-bar-count">${cnt}x</span>
+      </div>`).join("");
+  } catch {}
+}
+
+async function loadCycleStats() {
+  try {
+    const mSnap = await getDocs(collection(db,"mood_logs",user.uid,"entries"));
+    let mCount  = 0; mSnap.forEach(()=>mCount++);
+    document.getElementById("cs-len").textContent  = `${uData.cycleLength||28}d`;
+    document.getElementById("cs-day").textContent  = `${cycleInfo.day||"—"}`;
+    document.getElementById("cs-streak").textContent = `${uData.streak||0}🔥`;
+    document.getElementById("cs-logs").textContent = mCount;
+  } catch {}
+}
+
+window.loadChiReport = async () => {
+  const el = document.getElementById("chi-report-txt");
+  if (!el) return;
+  el.textContent = "Chinatsu is writing your report... 🌿";
+  try {
+    const mSnap  = await getDocs(query(collection(db,"mood_logs",user.uid,"entries"), orderBy("ts","desc"), limit(30)));
+    const scores = []; mSnap.forEach(d => scores.push(d.data().score||5));
+    const avg    = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : "unknown";
+    const sSnap  = await getDocs(collection(db,"cycle",user.uid,"symptoms"));
+    const symCounts = {}; sSnap.forEach(d=>(d.data().symptoms||[]).forEach(s=>symCounts[s]=(symCounts[s]||0)+1));
+    const topSym = Object.entries(symCounts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([s])=>s).join(", ")||"none logged";
+    const report = await groq(
+      `Write a warm monthly wellness summary for ${uData.name||"her"} as Chinatsu, her cycle mentor. Data: avg mood ${avg}/10, current phase Day ${cycleInfo.day} (${cycleInfo.phaseName}), top symptoms: ${topSym}, streak: ${uData.streak||0} days. Be specific, caring, actionable. Notice patterns. 4-5 sentences. No bullet points.`,
+      0.85, 300, MODEL_VENT
+    );
+    el.textContent = report;
+  } catch { el.textContent = "couldn't generate report right now — try again 🌿"; }
+};
+
+window.loadHypeReel = async () => {
+  const el = document.getElementById("hype-txt");
+  if (!el) return;
+  el.textContent = "Epipen is building your hype reel... 🔥";
+  try {
+    const snap = await getDocs(query(collection(db,"sessions",user.uid,"vents"), orderBy("ts","desc"), limit(20)));
+    const vents = []; snap.forEach(d => vents.push(d.data().vent?.slice(0,60)));
+    const hype = await groq(
+      `You are Epipen, Bloom's AI best friend. Write a HYPE REEL for ${uData.name||"her"} — she's been using this app and here are some things she's been through: ${vents.length ? vents.join("; ") : "just starting her journey"}. List everything she's survived, navigated, felt, and kept going through. Make her feel like the main character. Emotional and real. Hinglish ok. 5-6 sentences. Energy: "look at you. LOOK. AT. YOU." 🔥`,
+      0.95, 320, MODEL_VENT
+    );
+    el.textContent = hype;
+  } catch { el.textContent = "she showed up. every single time. that's the whole hype reel. 🔥"; }
+};
+
+// ─── SWIPE GESTURES ───
+function initSwipe() {
+  const pages   = ["home","bots","cycle","period","comfort","insights","profile"];
+  const pagesEl = document.querySelector(".pages");
+  if (!pagesEl) return;
+  let startX = 0, startY = 0;
+  pagesEl.addEventListener("touchstart", e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, {passive:true});
+  pagesEl.addEventListener("touchend", e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return; // not a horizontal swipe
+    const activePg = document.querySelector(".pg.active");
+    if (!activePg) return;
+    const curId  = activePg.id.replace("pg-","");
+    const curIdx = pages.indexOf(curId);
+    if (dx < 0 && curIdx < pages.length-1) {
+      // swipe left = next
+      haptic([8]);
+      const nextPage = pages[curIdx+1];
+      const navItem  = document.querySelector(`.ni:nth-child(${curIdx+2})`);
+      navTo(nextPage, navItem);
+    } else if (dx > 0 && curIdx > 0) {
+      // swipe right = prev
+      haptic([8]);
+      const prevPage = pages[curIdx-1];
+      const navItem  = document.querySelector(`.ni:nth-child(${curIdx})`);
+      navTo(prevPage, navItem);
+    }
+  }, {passive:true});
+}
+
+// ─── PATCH navTo for insights + haptic ───
+const _v8NavTo = window.navTo;
+window.navTo = (page, navEl) => {
+  haptic([8]);
+  const wipe = document.getElementById("wipe");
+  wipe.classList.add("on");
+  setTimeout(() => {
+    document.querySelectorAll(".pg").forEach(p=>p.classList.remove("active"));
+    document.querySelectorAll(".ni").forEach(n=>n.classList.remove("active"));
+    document.getElementById(`pg-${page}`)?.classList.add("active");
+    if (navEl) navEl.classList.add("active");
+    if (page==="cycle")    { computeCycle(); renderCal(); if(document.getElementById("phase-msg-txt")) loadPhaseMsg(); }
+    if (page==="period")   { setupPeriodPage(); }
+    if (page==="insights") { loadInsights(); }
+    if (page==="profile")  setupProfile();
+    wipe.classList.remove("on");
+    const msgs = {
+      home:     ["welcome back 🌸","hey gorgeous ✨"],
+      bots:     ["your people are here 💬","say anything 🌸"],
+      cycle:    ["your diary 🌙","private forever 🌸"],
+      period:   ["Chinatsu is here 🌿","your body, understood 🩸"],
+      comfort:  ["soft landing 🌸","take a breath ✨"],
+      insights: ["look how far you've come 📊","your patterns 🌸"],
+      profile:  ["main character behaviour 🌸"]
+    };
+    const m = msgs[page]; if(m) showPop(m[Math.floor(Math.random()*m.length)]);
+  }, 180);
+};
+
+// ─── PATCH launch to add v8 features ───
+const _origLaunch = window._v8launch || (() => {});
+const _v8LaunchPatch = () => {
+  initLoadingScreen();
+  initSwipe();
+  // load chi home widget after cycle computed
+  setTimeout(loadChiHomeWidget, 1200);
+  // haptic on all buttons
+  document.addEventListener("click", e => {
+    if (e.target.matches("button, .gem, .tile, .bot-card, .ni")) haptic([6]);
+  });
+};
+
+// auto-run patch when DOM is ready
+document.addEventListener("DOMContentLoaded", _v8LaunchPatch);
+// also run immediately if DOM already loaded
+if (document.readyState !== "loading") _v8LaunchPatch();

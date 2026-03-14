@@ -9,6 +9,22 @@
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen" class="loading-screen">
+  <div class="ls-inner">
+    <div class="ls-flower">
+      <div class="ls-ring r1"></div>
+      <div class="ls-ring r2"></div>
+      <div class="ls-ring r3"></div>
+      <span class="ls-core">🌸</span>
+    </div>
+    <h1 class="ls-logo">bloom</h1>
+    <p class="ls-tag">you bloom with dignity</p>
+    <div class="ls-bar"><div class="ls-fill"></div></div>
+  </div>
+</div>
+
 <canvas id="stars"></canvas>
 <div id="petals"></div>
 <div id="wipe" class="wipe"></div>
@@ -96,6 +112,19 @@
         <div class="streak-row">
           <div class="streak-badge"><span>🔥</span><span class="streak-num" id="streak-num">0</span><span class="streak-lbl">day streak</span></div>
           <div class="streak-msg" id="streak-msg">start your streak today 🌸</div>
+        </div>
+
+
+        <!-- chinatsu home widget -->
+        <div class="chi-home-widget" onclick="navTo('period',document.querySelector('.ni:nth-child(4)'))">
+          <div class="chw-left">
+            <span class="chw-ico">🌿</span>
+            <div>
+              <p class="chw-label">Chinatsu says</p>
+              <p class="chw-txt" id="chw-txt">loading your body update...</p>
+            </div>
+          </div>
+          <span class="chw-arrow">›</span>
         </div>
 
         <div class="affirmation-card">
@@ -425,6 +454,67 @@
         <div id="comfort-out" class="comfort-out" style="display:none"><div id="comfort-txt"></div></div>
       </div>
 
+
+      <!-- INSIGHTS -->
+      <div id="pg-insights" class="pg">
+        <div class="pg-hd">
+          <h2 class="pg-title">insights 📊</h2>
+          <p class="pg-sub">your patterns, understood</p>
+        </div>
+
+        <!-- mood graph -->
+        <div class="ins-card">
+          <div class="ins-card-hd">
+            <span class="ins-card-ttl">😊 mood this week</span>
+            <div class="ins-tabs">
+              <button class="ins-tab active" onclick="loadMoodGraph(this,7)">7d</button>
+              <button class="ins-tab" onclick="loadMoodGraph(this,30)">30d</button>
+            </div>
+          </div>
+          <canvas id="mood-canvas" class="mood-canvas"></canvas>
+          <div class="mood-graph-labels" id="mood-labels"></div>
+          <div class="mood-stats-row" id="mood-stats"></div>
+        </div>
+
+        <!-- symptom chart -->
+        <div class="ins-card">
+          <p class="ins-card-ttl">🩺 top symptoms</p>
+          <div id="sym-chart" class="sym-chart">
+            <p class="empty">log symptoms to see patterns 🌸</p>
+          </div>
+        </div>
+
+        <!-- cycle stats -->
+        <div class="ins-card">
+          <p class="ins-card-ttl">🩸 cycle stats</p>
+          <div class="cycle-stats-grid" id="cycle-stats-grid">
+            <div class="cs-item"><div class="cs-val" id="cs-len">—</div><div class="cs-lbl">avg cycle</div></div>
+            <div class="cs-item"><div class="cs-val" id="cs-day">—</div><div class="cs-lbl">current day</div></div>
+            <div class="cs-item"><div class="cs-val" id="cs-streak">—</div><div class="cs-lbl">streak 🔥</div></div>
+            <div class="cs-item"><div class="cs-val" id="cs-logs">—</div><div class="cs-lbl">mood logs</div></div>
+          </div>
+        </div>
+
+        <!-- chinatsu monthly report -->
+        <div class="ins-card chi-report-card">
+          <div class="ins-card-hd">
+            <span class="ins-card-ttl">🌿 Chinatsu's report</span>
+            <button class="ref-btn" onclick="loadChiReport()">↻</button>
+          </div>
+          <p id="chi-report-txt" class="chi-report-txt">tap ↻ to generate your monthly health summary</p>
+        </div>
+
+        <!-- hype reel -->
+        <div class="ins-card hype-card">
+          <div class="ins-card-hd">
+            <span class="ins-card-ttl">🔥 your hype reel</span>
+            <button class="ref-btn" onclick="loadHypeReel()">↻</button>
+          </div>
+          <p id="hype-txt" class="hype-txt">tap ↻ and Epipen will tell you everything you've survived 💪</p>
+        </div>
+
+      </div>
+
       <!-- PROFILE -->
       <div id="pg-profile" class="pg">
         <div class="prof-hdr">
@@ -475,12 +565,13 @@
 
     </div><!-- /pages -->
 
-    <nav class="nav">
+    <nav class="nav" id="main-nav">
       <div class="ni active" onclick="navTo('home',this)"><span class="ni-ico">🏠</span><span class="ni-lbl">Home</span></div>
       <div class="ni" onclick="navTo('bots',this)"><span class="ni-ico">💬</span><span class="ni-lbl">Chats</span></div>
       <div class="ni" onclick="navTo('cycle',this)"><span class="ni-ico">🌙</span><span class="ni-lbl">Diary</span></div>
       <div class="ni" onclick="navTo('period',this)"><span class="ni-ico">🩸</span><span class="ni-lbl">Cycle</span></div>
       <div class="ni" onclick="navTo('comfort',this)"><span class="ni-ico">🌸</span><span class="ni-lbl">Comfort</span></div>
+      <div class="ni" onclick="navTo('insights',this)"><span class="ni-ico">📊</span><span class="ni-lbl">Insights</span></div>
       <div class="ni" onclick="navTo('profile',this)"><span class="ni-ico">👤</span><span class="ni-lbl">Profile</span></div>
     </nav>
   </div>
