@@ -7,6 +7,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#9b6fd4"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Bloom"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
 </head>
 <body>
 
@@ -55,22 +61,43 @@
 
 <!-- ONBOARD -->
 <div id="s-onboard" class="screen">
-  <div class="ob-wrap"><div class="ob-card">
-    <div id="ob1" class="ob-step active">
-      <div class="ob-icon">👋</div><span class="chip">hey gorgeous</span>
-      <h2 class="ob-title">What's your name?</h2>
-      <p class="ob-hint">I want to know who I'm taking care of 🌸</p>
-      <input id="ob-name" class="b-input" type="text" placeholder="your name..." maxlength="30"/>
-      <button class="b-btn" onclick="obNext(1)">Next →</button>
+  <div class="ob-wrap">
+    <div class="ob-progress"><div class="ob-prog-fill" id="ob-prog-fill"></div></div>
+    <div class="ob-card">
+      <div id="ob1" class="ob-step active">
+        <div class="ob-blob"></div>
+        <div class="ob-icon-big">🌸</div>
+        <span class="chip">welcome to bloom</span>
+        <h2 class="ob-title">hey gorgeous,<br/>what's your name?</h2>
+        <p class="ob-hint">this is your space. I just want to know who I'm protecting 💜</p>
+        <input id="ob-name" class="b-input ob-input-big" type="text" placeholder="your name..." maxlength="30"/>
+        <button class="b-btn ob-btn-big" onclick="obNext(1)">let's go →</button>
+        <p class="ob-fine">your data stays yours. always.</p>
+      </div>
+      <div id="ob2" class="ob-step">
+        <div class="ob-icon-big">🌙</div>
+        <span class="chip">almost there</span>
+        <h2 class="ob-title">when did your last period start?</h2>
+        <p class="ob-hint">for your Womenstrual cycle tracker. zero judgment here. 🌸</p>
+        <input id="ob-cycle" class="b-input" type="date"/>
+        <button class="b-btn ob-btn-big" onclick="obNext(2)">bloom 🌸</button>
+        <button class="ob-skip" onclick="obSkip()">skip for now</button>
+      </div>
+      <div id="ob3" class="ob-step">
+        <div class="ob-icon-big">💉</div>
+        <span class="chip">meet epipen</span>
+        <h2 class="ob-title">your AI best friend<br/>is ready for you</h2>
+        <p class="ob-hint">vent, argue, release, heal. Epipen holds all of it. plus Jazz and Chinatsu are here too 🌿🎸</p>
+        <div class="ob-bots-preview">
+          <div class="ob-bot-pill">💉 Epipen</div>
+          <div class="ob-bot-pill">🌿 Chinatsu</div>
+          <div class="ob-bot-pill">🎸 Jazz</div>
+        </div>
+        <button class="b-btn ob-btn-big" onclick="obFinish()">enter bloom 🌸</button>
+      </div>
     </div>
-    <div id="ob2" class="ob-step">
-      <div class="ob-icon">🌙</div><span class="chip">almost there</span>
-      <h2 class="ob-title">Last period start?</h2>
-      <p class="ob-hint">For your Womenstrual cycle. Zero judgment. 🌸</p>
-      <input id="ob-cycle" class="b-input" type="date"/>
-      <button class="b-btn" onclick="obNext(2)">Let's go 🌸</button>
-    </div>
-  </div></div>
+    <p class="ob-brand">Bloom · Unravel Labs</p>
+  </div>
 </div>
 
 <!-- APP -->
@@ -163,6 +190,14 @@
         <div class="pg-hd">
           <h2 class="pg-title">your people 💬</h2>
           <p class="pg-sub">three vibes. all here for you.</p>
+        </div>
+        <div class="tell-card" onclick="openTellModal()">
+          <span class="tell-ico">✨</span>
+          <div class="tell-info">
+            <p class="tell-title">tell them about yourself</p>
+            <p class="tell-sub">all AIs will remember what you share</p>
+          </div>
+          <span class="chw-arrow">›</span>
         </div>
 
         <div class="bot-selector">
@@ -319,7 +354,7 @@
 
       <!-- CYCLE TRACKER -->
       <div id="pg-period" class="pg">
-        <div class="pg-hd"><h2 class="pg-title">cycle space 🩸</h2><p class="pg-sub">your body, understood</p></div>
+        <div class="pg-hd"><h2 class="pg-title">health space 🩸</h2><p class="pg-sub">your body, understood</p></div>
 
         <div id="pms-banner" class="pms-banner" style="display:none"><span id="pms-txt">⚠️ PMS window approaching</span></div>
 
@@ -392,6 +427,46 @@
           <div class="chi-tip-hd"><span>🌿 Chinatsu's tip for today</span><button class="ref-btn" onclick="loadChiTip()">↻</button></div>
           <p id="chi-tip-txt" class="chi-tip-txt">loading your daily tip...</p>
         </div>
+
+        <p class="sec-lbl">🧠 body check</p>
+        <div class="body-check-grid">
+          <div class="bc-tile" onclick="openBodyCheck('migraine')">
+            <div class="bc-ico">🤯</div>
+            <div class="bc-nm">Migraine</div>
+            <div class="bc-sub">tips + relief</div>
+          </div>
+          <div class="bc-tile" onclick="openBodyCheck('headache')">
+            <div class="bc-ico">😣</div>
+            <div class="bc-nm">Headache</div>
+            <div class="bc-sub">causes + care</div>
+          </div>
+          <div class="bc-tile" onclick="openBodyCheck('eyes')">
+            <div class="bc-ico">👁️</div>
+            <div class="bc-nm">Eye Pain</div>
+            <div class="bc-sub">screen fatigue</div>
+          </div>
+          <div class="bc-tile" onclick="openBodyCheck('cramps')">
+            <div class="bc-ico">🔥</div>
+            <div class="bc-nm">Cramps</div>
+            <div class="bc-sub">cycle relief</div>
+          </div>
+          <div class="bc-tile" onclick="openBodyCheck('fatigue')">
+            <div class="bc-ico">😴</div>
+            <div class="bc-nm">Fatigue</div>
+            <div class="bc-sub">energy restore</div>
+          </div>
+          <div class="bc-tile" onclick="openBodyCheck('nausea')">
+            <div class="bc-ico">🌊</div>
+            <div class="bc-nm">Nausea</div>
+            <div class="bc-sub">settle it down</div>
+          </div>
+        </div>
+        <div id="body-check-out" class="body-check-out" style="display:none">
+          <div class="bco-hd"><span id="bco-title"></span><button onclick="document.getElementById('body-check-out').style.display='none'" class="d-x">✕</button></div>
+          <p id="bco-txt" class="bco-txt"></p>
+        </div>
+
+        <p class="bloom-credit">Bloom by Unravel Labs</p>
       </div>
 
       <!-- COMFORT -->
@@ -400,7 +475,8 @@
         <div class="gem-grid">
           <div class="gem gm-pink" onclick="openComfort('meme')"><div class="gm-ico">😭</div><div class="gm-nm">Meme Therapy</div><div class="gm-sub">mood-based chaos</div></div>
           <div class="gem gm-gold" onclick="openComfort('glow')"><div class="gm-ico">💅</div><div class="gm-nm">Baddie Glow Up</div><div class="gm-sub">your skin your rules</div></div>
-          <div class="gem gm-teal" onclick="openComfort('dream')"><div class="gm-ico">🌠</div><div class="gm-nm">Dream Fuel</div><div class="gm-sub">slay queen energy</div></div>
+          <div class="gem gm-teal" onclick="document.getElementById('dream-modal').style.display='flex'"><div class="gm-ico">🌠</div><div class="gm-nm">Dream Fuel</div><div class="gm-sub">slay queen energy</div></div>
+          <div class="gem gm-vision" onclick="document.getElementById('vision-modal').style.display='flex'"><div class="gm-ico">🎯</div><div class="gm-nm">Vision Board</div><div class="gm-sub">your dreams, pinned</div></div>
           <div class="gem gm-rose" onclick="openComfort('surprise')"><div class="gm-ico">🎸</div><div class="gm-nm">Jazz Drop</div><div class="gm-sub">he has something 👀</div></div>
         </div>
 
@@ -521,6 +597,7 @@
           <div id="prof-av" class="prof-av"></div>
           <div class="prof-info"><h2 id="prof-nm" class="prof-nm">—</h2><p id="prof-email" class="prof-email">—</p></div>
           <div class="easter-egg">made with 🌸 for someone special</div>
+          <div class="jayesh-egg">made by jayesh · for the special one</div>
         </div>
         <div class="prof-sections">
           <div class="prof-sec">
@@ -558,8 +635,12 @@
             <p class="prof-sec-ttl">⚙️ settings</p>
             <div class="setting-row"><span class="s-lbl">Daily mood check-in</span><label class="toggle"><input type="checkbox" id="tog-checkin" checked onchange="saveSetting('checkin',this.checked)"/><span class="tog-track"></span></label></div>
             <div class="setting-row"><span class="s-lbl">Random compliments</span><label class="toggle"><input type="checkbox" id="tog-compliments" checked onchange="saveSetting('compliments',this.checked)"/><span class="tog-track"></span></label></div>
+            <div class="setting-row"><span class="s-lbl">🌙 Dark mode</span><label class="toggle"><input type="checkbox" id="tog-dark" checked onchange="toggleDarkMode(this.checked)"/><span class="tog-track"></span></label></div>
+            <div class="setting-row"><span class="s-lbl">🔔 Push notifications</span><label class="toggle"><input type="checkbox" id="tog-notifs" onchange="toggleNotifs(this.checked)"/><span class="tog-track"></span></label></div>
           </div>
+          <button class="install-btn" id="install-btn" style="display:none" onclick="installPWA()">📱 Add to Home Screen</button>
           <button class="signout-btn" onclick="doSignOut()">Sign Out</button>
+          <button class="delete-btn" onclick="deleteAccount()">🗑️ Delete Account & All Data</button>
         </div>
       </div>
 
@@ -569,11 +650,69 @@
       <div class="ni active" onclick="navTo('home',this)"><span class="ni-ico">🏠</span><span class="ni-lbl">Home</span></div>
       <div class="ni" onclick="navTo('bots',this)"><span class="ni-ico">💬</span><span class="ni-lbl">Chats</span></div>
       <div class="ni" onclick="navTo('cycle',this)"><span class="ni-ico">🌙</span><span class="ni-lbl">Diary</span></div>
-      <div class="ni" onclick="navTo('period',this)"><span class="ni-ico">🩸</span><span class="ni-lbl">Cycle</span></div>
+      <div class="ni" onclick="navTo('period',this)"><span class="ni-ico">🩸</span><span class="ni-lbl">Health</span></div>
       <div class="ni" onclick="navTo('comfort',this)"><span class="ni-ico">🌸</span><span class="ni-lbl">Comfort</span></div>
       <div class="ni" onclick="navTo('insights',this)"><span class="ni-ico">📊</span><span class="ni-lbl">Insights</span></div>
       <div class="ni" onclick="navTo('profile',this)"><span class="ni-ico">👤</span><span class="ni-lbl">Profile</span></div>
     </nav>
+  </div>
+</div>
+
+
+<!-- TELL ABOUT YOURSELF MODAL -->
+<div id="tell-modal" class="d-overlay" style="display:none">
+  <div class="d-card">
+    <div class="d-hd"><h3 class="d-date">✨ about you</h3><button onclick="closeTellModal()" class="d-x">✕</button></div>
+    <p class="future-hint">share what you want all AIs to always remember about you.</p>
+    <textarea id="tell-in" class="d-in" placeholder="e.g. my name is Rika, I love music and burritos, I'm preparing for NEET, my fav anime is Blue Box, I have a 13-day cycle..."></textarea>
+    <button class="b-btn" onclick="saveTellAbout()">save for all AIs 🌸</button>
+    <div id="tell-saved" style="display:none;margin-top:.75rem;padding:.75rem 1rem;background:rgba(155,111,212,.1);border:1px solid rgba(155,111,212,.2);border-radius:11px;font-size:.84rem;color:var(--text2)"></div>
+  </div>
+</div>
+
+<!-- VISION BOARD MODAL -->
+<div id="vision-modal" class="d-overlay" style="display:none">
+  <div class="d-card vision-d-card">
+    <div class="d-hd"><h3 class="d-date">🎯 vision board</h3><button onclick="document.getElementById('vision-modal').style.display='none'" class="d-x">✕</button></div>
+    <div class="vb-grid" id="vb-grid"></div>
+    <div class="vb-add-row">
+      <input id="vb-in" class="mc-in" placeholder="add a dream, goal, vibe..." type="text"/>
+      <select id="vb-emoji" class="vb-emoji-sel">
+        <option>🌟</option><option>💪</option><option>🎓</option><option>✈️</option>
+        <option>💰</option><option>🎵</option><option>💅</option><option>🌸</option>
+        <option>🔥</option><option>🏆</option><option>💜</option><option>🌍</option>
+      </select>
+      <button class="mc-send" onclick="addVisionTile()">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- DREAM FUEL MODAL -->
+<div id="dream-modal" class="d-overlay" style="display:none">
+  <div class="d-card">
+    <div class="d-hd"><h3 class="d-date">🌠 Dream Fuel</h3><button onclick="document.getElementById('dream-modal').style.display='none'" class="d-x">✕</button></div>
+    <p class="future-hint">what kind of woman do you aspire to be?</p>
+    <textarea id="dream-in-modal" class="d-in" placeholder="baddie with abs, travelling the world, financially independent..."></textarea>
+    <button class="b-btn" onclick="genDreamModal()">Fuel Me 🔥</button>
+    <div id="dream-modal-out" style="display:none;margin-top:.75rem"><p class="d-slbl">🌠 your fuel</p><p id="dream-modal-txt" class="d-txt"></p></div>
+  </div>
+</div>
+
+<!-- CHINATSU ADVICE POPUP -->
+<div id="chi-advice-pop" class="chi-advice-pop" style="display:none">
+  <button class="mpop-x" onclick="this.parentElement.style.display='none'">✕</button>
+  <div class="cap-inner">
+    <span class="cap-ico">🌿</span>
+    <div><p class="cap-from">Chinatsu says</p><p id="cap-txt" class="cap-msg"></p></div>
+  </div>
+</div>
+
+<!-- PATTERN RECOGNITION POPUP -->
+<div id="pattern-pop" class="chi-advice-pop pattern-pop" style="display:none">
+  <button class="mpop-x" onclick="this.parentElement.style.display='none'">✕</button>
+  <div class="cap-inner">
+    <span class="cap-ico">📊</span>
+    <div><p class="cap-from">Chinatsu noticed</p><p id="pattern-txt" class="cap-msg"></p></div>
   </div>
 </div>
 

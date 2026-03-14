@@ -1184,3 +1184,435 @@ const _v8LaunchPatch = () => {
 document.addEventListener("DOMContentLoaded", _v8LaunchPatch);
 // also run immediately if DOM already loaded
 if (document.readyState !== "loading") _v8LaunchPatch();
+
+// ═══════════════════════════════════════════
+// BLOOM V9 ADDITIONS
+// ═══════════════════════════════════════════
+
+// ─── PWA / SERVICE WORKER ───
+function initPWA() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW:', e));
+  }
+  // install prompt
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferredPrompt = e;
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'block';
+  });
+  window.installPWA = async () => {
+    if (!deferredPrompt) { toast("already installed or not supported 🌸"); return; }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') toast("bloom added to home screen 🌸");
+    deferredPrompt = null;
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'none';
+  };
+}
+
+// ─── DARK/LIGHT MODE ───
+window.toggleDarkMode = checked => {
+  document.body.setAttribute('data-mode', checked ? 'dark' : 'light');
+  uData.darkMode = checked;
+  setDoc(doc(db, 'users', user.uid), uData, {merge:true}).catch(()=>{});
+};
+
+// ─── ONBOARD V2 ───
+window.obSkip = () => {
+  document.getElementById('ob-cycle').value = new Date().toISOString().split('T')[0];
+  obNext(2);
+};
+
+window.obFinish = async () => {
+  uData = { ...uData, onboardDone: true };
+  await setDoc(doc(db, 'users', user.uid), uData, {merge:true});
+  launch();
+};
+
+// patch obNext to show step 3
+const _origObNext = window.obNext;
+window.obNext = async step => {
+  if (step === 1) {
+    const nm = document.getElementById('ob-name').value.trim();
+    if (!nm) { toast('tell me your name first 🌸'); return; }
+    uData.name = nm;
+    document.getElementById('ob1').classList.remove('active');
+    document.getElementById('ob2').classList.add('active');
+    document.getElementById('ob-cycle').value = new Date().toISOString().split('T')[0];
+    document.getElementById('ob-prog-fill').style.width = '66%';
+  } else {
+    const dt = document.getElementById('ob-cycle').value;
+    if (!dt) { toast('pick a date 🌙'); return; }
+    uData = { ...uData, cycleStart:dt, cycleLength:28, epiName:'Epipen', epiEmoji:'💉', createdAt:new Date().toISOString(), uid:user.uid, photoURL:user.photoURL||null, settings:{checkin:true,compliments:true}, theme:'lavender' };
+    await setDoc(doc(db,'users',user.uid), uData);
+    document.getElementById('ob2').classList.remove('active');
+    document.getElementById('ob3').classList.add('active');
+    document.getElementById('ob-prog-fill').style.width = '100%';
+  }
+};
+
+// ─── TELL ABOUT YOURSELF ───
+let userSelfInfo = '';
+
+window.openTellModal = async () => {
+  document.getElementById('tell-modal').style.display = 'flex';
+  try {
+    const snap = await getDoc(doc(db,'users',user.uid,'meta','selfinfo'));
+    if (snap.exists()) {
+      const txt = snap.data().text || '';
+      document.getElementById('tell-in').value = txt;
+      if (txt) { document.getElementById('tell-saved').style.display='block'; document.getElementById('tell-saved').textContent = `saved: "${txt.slice(0,80)}..."`; }
+    }
+  } catch {}
+};
+
+window.closeTellModal = () => document.getElementById('tell-modal').style.display = 'none';
+
+window.saveTellAbout = async () => {
+  const txt = document.getElementById('tell-in').value.trim();
+  if (!txt) { toast('write something first 🌸'); return; }
+  userSelfInfo = txt;
+  await setDoc(doc(db,'users',user.uid,'meta','selfinfo'), {text:txt, ts:Date.now()}).catch(()=>{});
+  document.getElementById('tell-saved').style.display = 'block';
+  document.getElementById('tell-saved').textContent = `saved ✓ all AIs will remember this 🌸`;
+  closeTellModal(); toast('all AIs updated 🌸');
+};
+
+async function loadSelfInfo() {
+  try {
+    const snap = await getDoc(doc(db,'users',user.uid,'meta','selfinfo'));
+    if (snap.exists()) userSelfInfo = snap.data().text || '';
+  } catch {}
+}
+
+// inject selfInfo into all system prompts — patch epipenSystem
+const _origEpipenSystem = epipenSystem;
+// override happens via userSelfInfo being read in prompts — already included below via getSelfInfoLine
+function getSelfInfoLine() {
+  return userSelfInfo ? `\nSHE TOLD ME ABOUT HERSELF: "${userSelfInfo.slice(0,300)}"` : '';
+}
+
+// ─── DELETE ACCOUNT ───
+window.deleteAccount = async () => {
+  const confirm1 = confirm('this will permanently delete ALL your data — diary, chats, cycle logs, everything. are you sure?');
+  if (!confirm1) return;
+  const confirm2 = confirm('last chance. this CANNOT be undone.');
+  if (!confirm2) return;
+  try {
+    toast('deleting your data... 🌸');
+    const colls = ['sessions','mood_logs','cycle'];
+    for (const coll of colls) {
+      try { const snap = await getDocs(collection(db,coll,user.uid,'vents')); snap.forEach(d=>deleteDoc(d.ref)); } catch {}
+      try { const snap = await getDocs(collection(db,coll,user.uid,'entries')); snap.forEach(d=>deleteDoc(d.ref)); } catch {}
+      try { const snap = await getDocs(collection(db,coll,user.uid,'period')); snap.forEach(d=>deleteDoc(d.ref)); } catch {}
+      try { const snap = await getDocs(collection(db,coll,user.uid,'diary')); snap.forEach(d=>deleteDoc(d.ref)); } catch {}
+      try { const snap = await getDocs(collection(db,coll,user.uid,'symptoms')); snap.forEach(d=>deleteDoc(d.ref)); } catch {}
+    }
+    await deleteDoc(doc(db,'users',user.uid)).catch(()=>{});
+    await signOut(auth);
+    showScreen('auth');
+    toast('account deleted 🌸');
+  } catch(e) { toast('error deleting — contact support'); console.error(e); }
+};
+
+// ─── DELETE CHAT SESSION ───
+window.deleteChatSession = async (bot, sessionId, el) => {
+  const colName = bot==='epipen'?'vents':bot==='chinatsu'?'chinatsu_sessions':'jazz_sessions';
+  try {
+    const q = query(collection(db,'sessions',user.uid,colName));
+    const snap = await getDocs(q);
+    const toDelete = [];
+    snap.forEach(d => { if(d.data().sessionId===sessionId) toDelete.push(d.ref); });
+    await Promise.all(toDelete.map(r=>deleteDoc(r)));
+    el.closest('.sess-item')?.remove();
+    toast('chat deleted 🌸');
+  } catch { toast('error deleting chat 😭'); }
+};
+
+// patch toggleHistory to add delete button
+const _origToggleHistory = window.toggleHistory;
+window.toggleHistory = async bot => {
+  const histEl = document.getElementById(`hist-${bot}`);
+  const isOpen = histEl.style.display !== 'none';
+  if (isOpen) { histEl.style.display = 'none'; return; }
+  histEl.style.display = 'block';
+  histEl.innerHTML = '<div class="sess-empty">loading...</div>';
+  try {
+    const colName = bot==='epipen'?'vents':bot==='chinatsu'?'chinatsu_sessions':'jazz_sessions';
+    const q    = query(collection(db,'sessions',user.uid,colName), orderBy('ts','desc'), limit(30));
+    const snap = await getDocs(q);
+    if (snap.empty) { histEl.innerHTML='<div class="sess-empty">no past chats yet 🌸</div>'; return; }
+    const sessions = {};
+    snap.forEach(d => {
+      const data = d.data(); const sid = data.sessionId || data.ts;
+      if (!sessions[sid]) sessions[sid] = {ts:data.ts, date:data.date, first:data.vent, msgs:[], sid};
+      sessions[sid].msgs.push(data);
+    });
+    histEl.innerHTML = '';
+    Object.values(sessions).sort((a,b)=>b.ts-a.ts).slice(0,15).forEach(sess => {
+      const el = document.createElement('div'); el.className = 'sess-item';
+      const dt = new Date(sess.ts).toLocaleDateString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      el.innerHTML = `<div class="sess-item-date">${dt}</div><div class="sess-item-preview">${sess.first?.slice(0,55)||'...'}</div><button class="sess-del" onclick="event.stopPropagation();deleteChatSession('${bot}','${sess.sid}',this)">🗑️</button>`;
+      el.onclick = () => loadSession(bot, sess.msgs);
+      histEl.appendChild(el);
+    });
+  } catch { histEl.innerHTML='<div class="sess-empty">couldn\'t load history 😭</div>'; }
+};
+
+// ─── JAZZ RANDOM CHECK-INS ───
+function scheduleJazzCheckin() {
+  const delay = (Math.random() * 60 + 30) * 60 * 1000; // 30-90 min
+  setTimeout(async () => {
+    if (document.getElementById('pg-bots')?.classList.contains('active')) { scheduleJazzCheckin(); return; }
+    try {
+      const checkins = [
+        "ayo 👀 kya scene hai",
+        "bhoot ho gayi? 🙄",
+        "haww ignore krri mujhe",
+        "bas dekh raha tha tu theek hai ya nahi",
+        "koi na main hoon na 🎸",
+        "teri maggie me tamatar daal diye maine 💀",
+        "me hi sab kuch hu toh naturally check in karna pada",
+      ];
+      const msg = checkins[Math.floor(Math.random() * checkins.length)];
+      showJazzCheckin(msg);
+    } catch {}
+    scheduleJazzCheckin();
+  }, delay);
+}
+
+function showJazzCheckin(msg) {
+  // show as a small popup that opens Jazz chat when tapped
+  const pop = document.createElement('div');
+  pop.style.cssText = 'position:fixed;bottom:calc(env(safe-area-inset-bottom) + 5.5rem);left:1rem;right:1rem;max-width:560px;margin:0 auto;background:linear-gradient(135deg,rgba(45,27,105,.8),rgba(139,92,246,.6));border:1px solid rgba(139,92,246,.4);border-radius:16px;backdrop-filter:blur(24px);padding:.9rem 1.1rem;z-index:400;animation:slideUp .4s cubic-bezier(.34,1.56,.64,1) both;cursor:pointer;display:flex;align-items:center;gap:.75rem;';
+  pop.innerHTML = `<span style="font-size:1.3rem">🎸</span><div style="flex:1"><p style="font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;color:rgba(167,139,250,.8);font-weight:700;margin-bottom:2px">Jazz</p><p style="font-size:.88rem;color:#f5eeff;font-weight:500">${msg}</p></div><button style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:.85rem;padding:4px" onclick="event.stopPropagation();this.closest('div[style]').remove()">✕</button>`;
+  pop.onclick = () => { quickOpenBot('jazz'); pop.remove(); };
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 8000);
+  haptic([10,50,10]);
+}
+
+// ─── CHINATSU RANDOM ADVICE ───
+const chinatsuAdvices = [
+  "SLEEP a minimum of 6 hours. your brain literally cleans itself at night. non-negotiable. 🌙",
+  "drink water rn. not in a bit. NOW. your body is 60% water and you're probably running on fumes 💧",
+  "you've been staring at a screen for a while — look 20 feet away for 20 seconds. your eyes need it 👁️",
+  "if you haven't eaten in 4+ hours, please eat something. even a biscuit. your hormones will thank you 🍪",
+  "your posture rn — sit up a little. neck pain during your period hits different and you don't need that 💆",
+  "taking a 10-minute walk literally reduces cortisol. not fitness advice. stress science. 🚶",
+  "if you're feeling extra emotional today, check your cycle day. it might just be your hormones doing their thing. valid. 🌊",
+];
+
+function scheduleChiAdvice() {
+  const delay = (Math.random() * 45 + 25) * 60 * 1000;
+  setTimeout(() => {
+    const msg = chinatsuAdvices[Math.floor(Math.random() * chinatsuAdvices.length)];
+    showChiAdvice(msg);
+    scheduleChiAdvice();
+  }, delay);
+}
+
+function showChiAdvice(msg) {
+  const el = document.getElementById('chi-advice-pop');
+  const txt = document.getElementById('cap-txt');
+  if (!el || !txt) return;
+  txt.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 9000);
+}
+
+// ─── PATTERN RECOGNITION ───
+async function checkPatterns() {
+  if (!user || !cycleInfo.day) return;
+  try {
+    const q    = query(collection(db,'mood_logs',user.uid,'entries'), orderBy('ts','desc'), limit(60));
+    const snap = await getDocs(q);
+    const byDay = {};
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.score && cycleInfo.day) {
+        const day = data.cycleDay || cycleInfo.day;
+        if (!byDay[day]) byDay[day] = [];
+        byDay[day].push(data.score);
+      }
+    });
+    // find days with consistently low mood
+    const lowDays = Object.entries(byDay)
+      .filter(([,scores]) => scores.length >= 2 && scores.reduce((a,b)=>a+b,0)/scores.length < 4.5)
+      .map(([day]) => day);
+    if (lowDays.length && cycleInfo.day && lowDays.includes(String(cycleInfo.day))) {
+      const el = document.getElementById('pattern-pop');
+      const txt = document.getElementById('pattern-txt');
+      if (el && txt) {
+        txt.textContent = `Day ${cycleInfo.day} tends to be harder for you. You've felt this before and got through it. Be extra gentle today 💜`;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 10000);
+      }
+    }
+  } catch {}
+}
+
+// ─── CYCLE LETTER FROM CHINATSU ───
+async function checkCycleLetter() {
+  if (!uData.cycleStart || !cycleInfo.day) return;
+  if (cycleInfo.day !== 1) return; // only on day 1 of new cycle
+  try {
+    const key = `cycle_letter_${uData.cycleStart}`;
+    const snap = await getDoc(doc(db,'users',user.uid,'meta',key));
+    if (snap.exists()) return; // already sent this cycle
+    const letter = await groq(
+      `Write a warm cycle letter from Chinatsu to ${uData.name||"her"} at the START of her new cycle. Reference: she's beginning a new cycle today, last cycle was ${uData.cycleLength||28} days. Acknowledge what her body just went through. Welcome the new beginning. Give 2 specific things to focus on in this new cycle based on the ${cycleInfo.phaseName} phase. Warm mentor energy. 5-6 sentences. Sign as "Chinatsu 🌿"`,
+      0.88, 300, MODEL_VENT
+    );
+    // show as a special popup
+    const pop = document.createElement('div');
+    pop.style.cssText = 'position:fixed;inset:0;background:rgba(7,6,15,.85);display:flex;align-items:center;justify-content:center;z-index:800;padding:1.5rem;backdrop-filter:blur(16px)';
+    pop.innerHTML = `<div style="max-width:400px;width:100%;padding:2rem;background:linear-gradient(135deg,rgba(113,178,128,.15),rgba(93,202,165,.1));border:1px solid rgba(113,178,128,.3);border-radius:24px;backdrop-filter:blur(28px)">
+      <p style="font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:#71b280;font-weight:700;margin-bottom:.75rem">🌿 A letter from Chinatsu</p>
+      <p style="font-size:.92rem;color:#f5eeff;line-height:1.75;font-family:'DM Sans',sans-serif">${letter}</p>
+      <button style="width:100%;margin-top:1.25rem;padding:12px;background:linear-gradient(135deg,#134e5e,#71b280);border:none;border-radius:12px;color:#fff;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer" onclick="this.closest('div[style*=fixed]').remove()">thank you Chinatsu 🌸</button>
+    </div>`;
+    document.body.appendChild(pop);
+    await setDoc(doc(db,'users',user.uid,'meta',key), {sent:true, ts:Date.now()}).catch(()=>{});
+  } catch(e) { console.warn('cycle letter:', e); }
+}
+
+// ─── VISION BOARD ───
+let visionTiles = [];
+
+async function loadVisionBoard() {
+  try {
+    const snap = await getDocs(collection(db,'users',user.uid,'vision'));
+    visionTiles = [];
+    snap.forEach(d => visionTiles.push({id:d.id, ...d.data()}));
+    renderVisionBoard();
+  } catch {}
+}
+
+function renderVisionBoard() {
+  const grid = document.getElementById('vb-grid'); if(!grid) return;
+  if (!visionTiles.length) { grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:var(--text3);font-size:.85rem;padding:1rem">add your first dream 🌟</p>'; return; }
+  grid.innerHTML = visionTiles.map(t => `
+    <div class="vb-tile">
+      <button class="vb-del" onclick="deleteVisionTile('${t.id}')">✕</button>
+      <div class="vb-tile-ico">${t.emoji||'🌟'}</div>
+      <div class="vb-tile-txt">${t.text}</div>
+    </div>`).join('');
+}
+
+window.addVisionTile = async () => {
+  const inp   = document.getElementById('vb-in');
+  const emoji = document.getElementById('vb-emoji').value;
+  const text  = inp.value.trim();
+  if (!text) { toast('add a dream first 🌟'); return; }
+  inp.value = '';
+  try {
+    const ref = await addDoc(collection(db,'users',user.uid,'vision'), {text, emoji, ts:Date.now()});
+    visionTiles.push({id:ref.id, text, emoji});
+    renderVisionBoard(); haptic([10]);
+  } catch { toast('error saving 😭'); }
+};
+
+window.deleteVisionTile = async id => {
+  await deleteDoc(doc(db,'users',user.uid,'vision',id)).catch(()=>{});
+  visionTiles = visionTiles.filter(t=>t.id!==id);
+  renderVisionBoard();
+};
+
+// ─── DREAM FUEL MODAL ───
+window.genDreamModal = async () => {
+  const desc = document.getElementById('dream-in-modal').value.trim();
+  if (!desc) { toast('tell me your dreams first 🌠'); return; }
+  const out = document.getElementById('dream-modal-out');
+  const txt = document.getElementById('dream-modal-txt');
+  out.style.display='block'; txt.textContent='loading your fuel... 🔥';
+  try {
+    const res = await groq(`${uData.name||"She"} aspires to be: "${desc}". Generate powerful personalised motivation. Custom affirmation, 2-3 concrete things she can do TODAY, one inspiring reference, end with something screenshot-worthy. Mix poetic with practical.`, 0.95, 320);
+    txt.textContent = res;
+  } catch { txt.textContent="you're already becoming her. 🔥"; }
+};
+
+// ─── BODY CHECK ───
+window.openBodyCheck = async type => {
+  const out = document.getElementById('body-check-out');
+  const ttl = document.getElementById('bco-title');
+  const txt = document.getElementById('bco-txt');
+  out.style.display='block'; txt.textContent='Chinatsu is checking in... 🌿';
+  const titles = { migraine:'🤯 Migraine', headache:'😣 Headache', eyes:'👁️ Eye Pain', cramps:'🔥 Cramps', fatigue:'😴 Fatigue', nausea:'🌊 Nausea' };
+  ttl.textContent = titles[type] || type;
+  const prompts = {
+    migraine:  `Give warm reassuring tips for someone with a migraine. She's in her ${cycleInfo.phaseName||"cycle"} phase which can affect this. Include: 3 immediate relief tips, 1 thing to avoid, 1 gentle reassurance. Sound like a caring friend, not a doctor. No bullet points.`,
+    headache:  `Give warm caring tips for a headache. She's in her ${cycleInfo.phaseName||"cycle"} phase. Include: possible causes related to her cycle, 3 relief tips, reassurance it'll pass. Sound like a caring friend.`,
+    eyes:      `Give gentle tips for eye pain/screen fatigue for someone studying hard (NEET prep). Include: 3 relief tips, 20-20-20 rule explained simply, one cute reminder to rest. Warm and reassuring.`,
+    cramps:    `Give warm caring tips for period cramps for someone in their ${cycleInfo.phaseName||"Womenstrual"} phase. Include: heat therapy, movement, what to eat, one reassurance. Sound like a caring friend. Use "Womenstrual" not "menstrual".`,
+    fatigue:   `Give gentle tips for fatigue during the ${cycleInfo.phaseName||"luteal"} phase. Include: why this happens in this phase, 3 gentle energy restoring tips, one permission slip to rest. Warm and validating.`,
+    nausea:    `Give warm tips for nausea that can happen during the cycle's ${cycleInfo.phaseName||"current"} phase. Include: 3 gentle relief tips, possible hormonal cause, reassurance. Sound like a caring friend.`
+  };
+  try {
+    const res = await groq(prompts[type]||prompts.headache, 0.82, 240, MODEL_VENT);
+    txt.textContent = res;
+  } catch { txt.textContent="rest, hydrate, and be gentle with yourself. you've got this. 🌿"; }
+  out.scrollIntoView({behavior:'smooth', block:'nearest'});
+  haptic([8]);
+};
+
+// ─── PUSH NOTIFICATIONS ───
+window.toggleNotifs = async checked => {
+  if (!checked) return;
+  if (!('Notification' in window)) { toast("notifications not supported on this browser"); document.getElementById('tog-notifs').checked=false; return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    toast("notifications enabled 🌸");
+    uData.notifs = true;
+    setDoc(doc(db,'users',user.uid), uData, {merge:true}).catch(()=>{});
+    // schedule local notif as demo
+    setTimeout(() => {
+      if (Notification.permission === 'granted') {
+        new Notification('bloom 🌸', { body: `hey ${uData.name||"bestie"} — checking in on you 💉`, icon: '/icon-192.png' });
+      }
+    }, 3000);
+  } else {
+    toast("notifications blocked 😭");
+    document.getElementById('tog-notifs').checked = false;
+  }
+};
+
+// ─── PATCH LAUNCH FOR V9 ───
+const _v9patch = () => {
+  initPWA();
+  scheduleJazzCheckin();
+  scheduleChiAdvice();
+  setTimeout(checkPatterns, 5000);
+  setTimeout(checkCycleLetter, 3000);
+  setTimeout(loadSelfInfo, 1000);
+  setTimeout(loadVisionBoard, 2000);
+  // dark mode restore
+  if (uData.darkMode === false) { document.body.setAttribute('data-mode','light'); const tog=document.getElementById('tog-dark'); if(tog)tog.checked=false; }
+  // notifs restore
+  if (uData.notifs && Notification.permission==='granted') { const tog=document.getElementById('tog-notifs'); if(tog)tog.checked=true; }
+};
+
+// run after launch — attach to DOMContentLoaded as extra safety
+if (document.readyState !== 'loading') { setTimeout(_v9patch, 500); }
+else { document.addEventListener('DOMContentLoaded', () => setTimeout(_v9patch, 500)); }
+
+// ─── PATCH system prompts to include selfInfo ───
+// Store original functions and wrap them
+const _baseEpiSys   = epipenSystem;
+const _baseChi      = chinatsuSystem;
+const _baseJazz     = jazzSystem;
+
+// override at module level
+window._getSelfInfoLine = getSelfInfoLine;
+
+// Monkeypatch sendBotMsg to inject selfInfo into system
+const _origSendBotMsg = window.sendBotMsg;
+window.sendBotMsg = async bot => {
+  // inject selfInfo into memory before sending
+  if (userSelfInfo && !memory.includes(userSelfInfo.slice(0,30))) {
+    memory = `USER ABOUT HERSELF: "${userSelfInfo}"\n` + memory;
+  }
+  return _origSendBotMsg(bot);
+};
